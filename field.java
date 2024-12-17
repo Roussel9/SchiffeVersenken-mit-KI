@@ -74,7 +74,7 @@ Turtle t = new Turtle();
 
         int laenge = schiffLaengen[platzierteSchiffeSpieler];
         if (schiffPlatzieren(spielfeldSpieler, zeile, spalte, laenge, horizontal)) { //ruft die methode , um Schiffe zu platzieren und dann wird true wenn der erste Schiff plaztiert ist
-            
+            Schiff neuesSchiff = new Schiff();
             platzierteSchiffeSpieler++;
             
             // Wenn der Spieler alle Schiffe platziert hat, platziert die KI automatisch ihre Schiffe
@@ -179,7 +179,7 @@ public void schiffePlatzierenSpielerTurtle(int row, int col, boolean horizontal)
     t.left(90);
     t.color(0,0,0);  // Zeichne das "S" in der Mitte
 }
-
-
-
 }
+
+
+
