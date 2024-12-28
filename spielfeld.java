@@ -3,16 +3,17 @@ import java.util.List;
 import java.util.Random;
 
 public class Spielfeld {
-    Turtle t = new Turtle();
-    private char[][] spielfeldSpieler;  // 2D-Array für das Spielfeld des Spielers (10x10)
-    private char[][] spielfeldKI;       // 2D-Array für das Spielfeld der KI (10x10)
-    private List<Schiff> schiffeSpieler;  // Liste für die Schiffe des Spielers
-    private List<Schiff> schiffeKI;  // Liste für die Schiffe der KI
+    Turtle t = new Turtle(500,600);
+    KI ki;
+    public char[][] spielfeldSpieler;  // 2D-Array für das Spielfeld des Spielers (10x10)
+    public char[][] spielfeldKI;       // 2D-Array für das Spielfeld der KI (10x10)
+    public List<Schiff> schiffeSpieler;  // Liste für die Schiffe des Spielers
+    public List<Schiff> schiffeKI;  // Liste für die Schiffe der KI
 
-    private final int[] schiffLaengen = {2, 3, 4, 5};  // Die Längen der Schiffe
-    private int platzierteSchiffeSpieler = 0;  // Anzahl platzierter Schiffe des Spielers
-    private boolean kiSchiffePlatziert = false;  // Status, ob die KI ihre Schiffe bereits platziert hat
-    private int zuegeDesSpielers = 0; // Zählt die Züge des Spielers in einer Runde
+    public final int[] schiffLaengen = {2, 3, 4, 5};  // Die Längen der Schiffe
+    public int platzierteSchiffeSpieler = 0;  // Anzahl platzierter Schiffe des Spielers
+    public boolean kiSchiffePlatziert = false;  // Status, ob die KI ihre Schiffe bereits platziert hat
+    public int zuegeDesSpielers = 0; // Zählt die Züge des Spielers in einer Runde
 
     // Konstruktor: Erstellen und Initialisieren der Spielfelder und SchiffsListe
     public Spielfeld() {
@@ -27,52 +28,66 @@ public class Spielfeld {
                 spielfeldSpieler[i][j] = '~';   // "~" für Wasser
             }
         }
+        ki = new KI(this);  // Neues KI-Objekt wird hier erstellt
+        // 1. Willkommensnachricht anzeigen
+    zeichneStartbildschirm();
+
+    // 2. Verzögerung von 20 Sekunden
+    try {
+        Thread.sleep(20000); // 20 Sekunden warten
+    } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
     }
 
-    // toString-Methode zum Darstellen des Spielfeldes
-    @Override
-    public String toString() {
-        int x = 150;
-        int y = 80;
-        t.textSize = 20;
-        t.moveTo(x, y);
-        StringBuilder sb = new StringBuilder();
-        t.left(90).moveTo(220, y).text("Spieler").right(90);
-        y = y + 25;
-        t.moveTo(x, y);
-        sb.append(" Spieler:\n");
-        for (int i = 0; i < 10; i++) {
-            for (int j = 0; j < 10; j++) {
-                for (int k = 1; k <= 4; k++) {
-                    t.forward(15).right(90);
-                }
-                t.forward(15);
-                sb.append(spielfeldSpieler[i][j] + " ");
-            }
-            y = y + 15;
-            t.moveTo(x, y);
-            sb.append("\n");
-        }
-        y = y + 50;
-
-        t.moveTo(x, y).left(90).moveTo(220, y).text("Computer").right(90);
-        y = y + 25;
-        t.moveTo(x, y);
-        sb.append(" Computer:\n");
-        for (int i = 0; i < 10; i++) {
-            for (int j = 0; j < 10; j++) {
-                for (int k = 1; k <= 4; k++) {
-                    t.forward(15).right(90);
-                }
-                t.forward(15);
-                sb.append(spielfeldKI[i][j] + " ");
-            }
-            y = y + 15;
-            t.moveTo(x, y);
-            sb.append("\n");
-        }
-        return sb.toString();
+    // 3. Startbildschirm leeren und Spielfelder anzeigen
+    t.reset(); // Entfernt den Startbildschirm
+        spielfeldTurtle("Spieler");
+        spielfeldTurtle("KI");
     }
+
+    // Methode zur Visualisierung auf dem Browser
+    public void spielfeldTurtle(String spielerTyp) {
+    int x = 150; // Startposition X
+    int y = spielerTyp.equals("Spieler") ? 80 : 305; // Unterschiedliche Y-Position für Spieler und KI
+    t.textSize = 20;
+
+    // Überschrift anzeigen
+    t.left(90).moveTo(220, y).color(0,255,0);
+    t.text(spielerTyp.equals("Spieler") ? "Spieler" : "Computer");
+    t.right(90);
+    t.color(0,0,255);
+    // Spielfeld zeichnen
+    y += 25; // Platz unter der Überschrift
+    t.moveTo(x, y);
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 10; j++) {
+            // Quadrat zeichnen
+            for (int k = 0; k < 4; k++) {
+                t.forward(15).right(90);
+            }
+            t.penUp().forward(15).penDown(); // Nächstes Kästchen
+        }
+        y += 15; // Verschiebe Y-Position für die nächste Zeile
+        t.penUp().moveTo(x, y).penDown();
+    }t.color(0,0,0);
+}
+
+public void zeichneStartbildschirm() {
+    t.left(90);
+    t.moveTo(250, 100);
+    t.textSize = 30;
+    t.color(0,0,255);
+    t.text("Willkommen zu Schiffe Versenken!");
+    t.textSize = 20;
+    t.moveTo(250, 250);
+    t.text("Das Spiel startet gleich...");
+    t.textSize = 15;
+    t.moveTo(250, 300);
+    t.text("Platzieren Sie bitte Ihre Schiffe!");
+    t.color(0,0,0);
+    t.right(90);
+}
+
 
     // Methode zum Platzieren eines Schiffs auf dem Spielfeld des Spielers
     public boolean schiffPlatzierenSpieler(int zeile, int spalte, boolean horizontal) {
@@ -133,62 +148,135 @@ public class Spielfeld {
     public void schussAbgebenSpieler(int zeile, int spalte) {
         if (zuegeDesSpielers >= 3) {
             System.out.println("Du hast bereits 3 Züge gemacht. Nun ist die KI dran.");
+            ki.macheKIZuege();// KI macht ihre drei Züge
             return;
         }
+
+        // Überprüfung, ob die Position bereits geschossen wurde
+    if (spielfeldKI[zeile][spalte] == 'X' || spielfeldKI[zeile][spalte] == '0') {
+        System.out.println("Du hast bereits auf diese Position geschossen! Wähle eine andere.");
+        return;
+    }
         
         // Überprüfen, ob der Schuss ein Treffer oder Fehlschuss ist
         if (spielfeldKI[zeile][spalte] == 'S') {
             System.out.println("Treffer!");
             spielfeldKI[zeile][spalte] = 'X';  // Markiere als Treffer
-            zeichneTreffer(zeile, spalte);
-            checkeUndMarkiereVollstaendigZerstörteSchiffe();
+            zeichneTreffer(zeile, spalte,"KI");
+            checkeUndMarkiereVollstaendigZerstörteSchiffeKI();
         } else {
             System.out.println("Fehlschuss!");
             spielfeldKI[zeile][spalte] = '0';  // Markiere als Fehlschuss
-            zeichneFehlschuss(zeile, spalte);
+            zeichneFehlschuss(zeile, spalte,"KI");
         }
 
         zuegeDesSpielers++;
         if (zuegeDesSpielers == 3) {
             System.out.println("Du hast 3 Züge gemacht. Jetzt ist die KI dran.");
+            ki.macheKIZuege();// KI macht ihre drei Züge
         }
+
+        // Gewinnerprüfung nach dem Schuss
+String gewinner = pruefeGewinner();
+if (gewinner != null) {
+    System.out.println(gewinner);
+    //System.exit(0); // Spiel beenden
+}
+
     }
 
     // Überprüft, ob ein Schiff vollständig zerstört wurde, und zeichnet eine rote Linie
-    private void checkeUndMarkiereVollstaendigZerstörteSchiffe() {
-        for (Schiff schiff : schiffeKI) {
-            boolean zerstört = true;
-            if (schiff.isHorizontal()) {
-                for (int i = 0; i < schiff.getLaenge(); i++) {
-                    if (spielfeldKI[schiff.getZeile()][schiff.getSpalte() + i] != 'X') {
-                        zerstört = false;
-                        break;// Verlasse die Schleife für dieses Schiff
-                    }
-                }
-            } else {
-                for (int i = 0; i < schiff.getLaenge(); i++) {
-                    if (spielfeldKI[schiff.getZeile() + i][schiff.getSpalte()] != 'X') {
-                        zerstört = false;
-                        break;
-                    }
+    private void checkeUndMarkiereVollstaendigZerstörteSchiffeKI() {
+    // Durchlaufe die Liste der Schiffe der KI mit einer normalen Schleife
+    for (int i = 0; i < schiffeKI.size(); i++) {
+        Schiff schiff = schiffeKI.get(i);
+        boolean zerstört = true;
+
+        // Überprüfen, ob das Schiff horizontal oder vertikal ist
+        if (schiff.isHorizontal()) {
+            // Überprüfen jedes Feld des Schiffes in horizontaler Richtung
+            for (int j = 0; j < schiff.getLaenge(); j++) {
+                if (spielfeldKI[schiff.getZeile()][schiff.getSpalte() + j] != 'X') {
+                    zerstört = false; // Schiff ist noch nicht vollständig zerstört
+                    break; // Verlasse die Schleife, wenn eines der Felder nicht getroffen wurde
                 }
             }
-
-            if (zerstört) {
-                // Rote Linie auf das zerstörte Schiff zeichnen
-                System.out.println("Ein Schiff komplett zerstört");
-                zeichneRoteLinie(schiff);
-                return;
+        } else {
+            // Überprüfen jedes Feld des Schiffes in vertikaler Richtung
+            for (int j = 0; j < schiff.getLaenge(); j++) {
+                if (spielfeldKI[schiff.getZeile() + j][schiff.getSpalte()] != 'X') {
+                    zerstört = false; // Schiff ist noch nicht vollständig zerstört
+                    break; // Verlasse die Schleife, wenn eines der Felder nicht getroffen wurde
+                }
             }
         }
+
+        // Wenn das Schiff vollständig zerstört wurde
+        if (zerstört) {
+            // Rote Linie auf das zerstörte Schiff zeichnen
+            System.out.println("Ein Schiff der KI komplett zerstört");
+            zeichneRoteLinie(schiff,"KI");
+            schiffeKI.remove(i);  // Entferne das zerstörte Schiff aus der Liste der KI-Schiffe
+            i--; // Reduziere den Index, um das nächste Schiff korrekt zu überprüfen (wegen Entfernen)
+        }
     }
+}
+
+
+    public void checkeUndMarkiereVollstaendigZerstörteSchiffeSpieler() {
+        // Durchlaufe die Liste der Schiffe des Spieler mit einer normalen Schleife
+    for (int j = 0; j < schiffeSpieler.size(); j++) {
+        Schiff schiff = schiffeSpieler.get(j);
+
+        boolean zerstört = true;
+
+        // Überprüfen, ob das Schiff horizontal oder vertikal ist
+        if (schiff.isHorizontal()) {
+            // Überprüfen jedes Feld des Schiffes in horizontaler Richtung
+            for (int i = 0; i < schiff.getLaenge(); i++) {
+                if (spielfeldSpieler[schiff.getZeile()][schiff.getSpalte() + i] != 'X') {
+                    zerstört = false; // Schiff ist nicht vollständig zerstört
+                    break; // Verlasse die Schleife, da das Schiff nicht zerstört ist
+                }
+            }
+        } else {
+            // Überprüfen jedes Feld des Schiffes in vertikaler Richtung
+            for (int i = 0; i < schiff.getLaenge(); i++) {
+                if (spielfeldSpieler[schiff.getZeile() + i][schiff.getSpalte()] != 'X') {
+                    zerstört = false; // Schiff ist nicht vollständig zerstört
+                    break; // Verlasse die Schleife, da das Schiff nicht zerstört ist
+                }
+            }
+        }
+
+        // Wenn das Schiff vollständig zerstört wurde
+        if (zerstört) {
+            // Rote Linie auf das zerstörte Schiff zeichnen
+            System.out.println("Ein Schiff des Spielers komplett zerstört");
+            zeichneRoteLinie(schiff,"Spieler");
+            schiffeSpieler.remove(schiff); // Schiff aus der Liste der nicht zerstörten Schiffe entfernen
+             j--; // Reduziere den Index, um das nächste Schiff korrekt zu überprüfen (wegen Entfernen)
+        }
+    }
+}
 
 
 
-private void zeichneTreffer(int zeile, int spalte) {
+
+public void zeichneTreffer(int zeile, int spalte, String spielfeld) {
    // t.right(0);
-    int xStart = 150 + (spalte * 15);
-    int yStart = 330 + (zeile * 15);
+   int x = 0;
+   int y = 0;
+        if(spielfeld.equals("KI")){
+            x = 150 ;
+            y = 330;
+        }
+        if(spielfeld.equals("Spieler")){
+            x = 150;
+            y = 105;
+        }
+    int xStart = x + (spalte * 15);
+    int yStart = y + (zeile * 15);
 
     t.penUp();
     t.moveTo(xStart, yStart);
@@ -203,11 +291,22 @@ private void zeichneTreffer(int zeile, int spalte) {
 }
 
 // Methode zum Zeichnen der "0" für einen Fehlschuss
-private void zeichneFehlschuss(int zeile, int spalte) {
+public void zeichneFehlschuss(int zeile, int spalte, String spielfeld) {
   //  t.right(0);
+  int x = 0;
+   int y = 0;
+        if(spielfeld.equals("KI")){
+            x = 150 ;
+            y = 330;
+        }
+        if(spielfeld.equals("Spieler")){
+            x = 150;
+            y = 105;
+        }
+
     t.textSize = 10;
-    int xStart = 150 + (spalte * 15);
-    int yStart = 330 + (zeile * 15);
+    int xStart = x + (spalte * 15);
+    int yStart = y + (zeile * 15);
 
     t.penUp();
     t.moveTo(xStart, yStart);
@@ -221,18 +320,28 @@ private void zeichneFehlschuss(int zeile, int spalte) {
 
 
     // Zeichnet eine rote Linie über das zerstörte Schiff
-    private void zeichneRoteLinie(Schiff schiff) {
-        int startX, startY, endX, endY;
-        int squareLaenge = 15;
+    private void zeichneRoteLinie(Schiff schiff, String spielfeld) {
+        double x = 0;
+        double y = 0;
+        if(spielfeld.equals("KI")){
+            x = 150 ;
+            y = 330;
+        }
+        if(spielfeld.equals("Spieler")){
+            x = 150;
+            y = 105;
+        }
+        double startX, startY, endX, endY;
+        double squareLaenge = 15;
 
         if (schiff.isHorizontal()) {
-            startX = 150 + (schiff.getSpalte() * squareLaenge);
-            startY = 105 + (schiff.getZeile() * squareLaenge);
+            startX = x + (schiff.getSpalte() * squareLaenge);
+            startY = y + (schiff.getZeile() * squareLaenge) + 7.5;
             endX = startX + (schiff.getLaenge() * squareLaenge);
             endY = startY;
         } else {
-            startX = 150 + (schiff.getSpalte() * squareLaenge);
-            startY = 105 + (schiff.getZeile() * squareLaenge);
+            startX = x + (schiff.getSpalte() * squareLaenge) + 7.5;
+            startY = y + (schiff.getZeile() * squareLaenge);
             endX = startX;
             endY = startY + (schiff.getLaenge() * squareLaenge);
         }
@@ -242,6 +351,7 @@ private void zeichneFehlschuss(int zeile, int spalte) {
         t.penDown();
         t.color(255, 0, 0);  // Rote Farbe
         t.lineTo(endX, endY);
+        t.color(0,0,0);
     }
 
     // Methode zum Platzieren der Schiffe der KI (derzeit zufällig)
@@ -310,4 +420,56 @@ private void zeichneFehlschuss(int zeile, int spalte) {
     t.left(90);
     t.color(0,0,0);  // Zeichne das "S" in der Mitte
 }
+
+
+// Methode, um zu prüfen, ob ein Spieler verloren hat
+public String pruefeGewinner() {
+    // Überprüfe, ob der Spieler noch Schiffe hat
+    boolean spielerHatSchiffe = false;
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 10; j++) {
+            if (spielfeldSpieler[i][j] == 'S') {
+                spielerHatSchiffe = true;
+                break;
+            }
+        }
+        if (spielerHatSchiffe) break;
+    }
+
+    // Überprüfe, ob die KI noch Schiffe hat
+    boolean kiHatSchiffe = false;
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 10; j++) {
+            if (spielfeldKI[i][j] == 'S') {
+                kiHatSchiffe = true;
+                break;
+            }
+        }
+        if (kiHatSchiffe) break;
+    }
+
+    // Bestimme den Gewinner
+    if (!spielerHatSchiffe) {
+        //t.reset();
+        t.left(90);
+        t.textSize = 30;
+        t.moveTo(250,520);
+        t.color(255,0,0);  
+        t.text("Computer hat gewonnen!");
+        t.right(90);
+        return "Computer hat gewonnen!";
+    } else if (!kiHatSchiffe) {
+        //t.reset();
+        t.left(90);
+        t.textSize = 30;
+        t.moveTo(250,520);
+        t.color(0,255,0);
+        t.text("Sie haben gewonnen");
+        t.right(90);
+        return "Sie haben gewonnen!";
+    }
+    return null; // Noch kein Gewinner
+}
+
+
 }
