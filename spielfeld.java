@@ -14,7 +14,7 @@ public class Spielfeld {
     public int platzierteSchiffeSpieler = 0;  // Anzahl platzierter Schiffe des Spielers
     public boolean kiSchiffePlatziert = false;  // Status, ob die KI ihre Schiffe bereits platziert hat
     public int zuegeDesSpielers = 0; // Zählt die Züge des Spielers in einer Runde
-
+    public boolean spielBeendet = false;
     // Konstruktor: Erstellen und Initialisieren der Spielfelder und SchiffsListe
     public Spielfeld() {
         spielfeldKI = new char[10][10];
@@ -34,7 +34,7 @@ public class Spielfeld {
 
     // 2. Verzögerung von 20 Sekunden
     try {
-        Thread.sleep(20000); // 20 Sekunden warten
+        Thread.sleep(10000); // 20 Sekunden warten
     } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
     }
@@ -146,6 +146,11 @@ public void zeichneStartbildschirm() {
 
     // Methode für den Spieler, um einen Schuss abzugeben
     public void schussAbgebenSpieler(int zeile, int spalte) {
+        if (spielBeendet) {
+        System.out.println("Das Spiel ist bereits beendet. Keine Züge mehr möglich.");
+        return;
+    }
+
         if (zuegeDesSpielers >= 3) {
             System.out.println("Du hast bereits 3 Züge gemacht. Nun ist die KI dran.");
             ki.macheKIZuege();// KI macht ihre drei Züge
@@ -162,26 +167,28 @@ public void zeichneStartbildschirm() {
         if (spielfeldKI[zeile][spalte] == 'S') {
             System.out.println("Treffer!");
             spielfeldKI[zeile][spalte] = 'X';  // Markiere als Treffer
+            zuegeDesSpielers++;
             zeichneTreffer(zeile, spalte,"KI");
             checkeUndMarkiereVollstaendigZerstörteSchiffeKI();
+            String gewinner = pruefeGewinner();
+            if (gewinner != null) {
+                System.out.println(gewinner);
+            //System.exit(0); // Spiel beenden
+            }
         } else {
             System.out.println("Fehlschuss!");
             spielfeldKI[zeile][spalte] = '0';  // Markiere als Fehlschuss
             zeichneFehlschuss(zeile, spalte,"KI");
+            zuegeDesSpielers++;
         }
 
-        zuegeDesSpielers++;
         if (zuegeDesSpielers == 3) {
             System.out.println("Du hast 3 Züge gemacht. Jetzt ist die KI dran.");
             ki.macheKIZuege();// KI macht ihre drei Züge
         }
 
         // Gewinnerprüfung nach dem Schuss
-String gewinner = pruefeGewinner();
-if (gewinner != null) {
-    System.out.println(gewinner);
-    //System.exit(0); // Spiel beenden
-}
+//String gewinner = pruefeGewinner();
 
     }
 
@@ -457,6 +464,9 @@ public String pruefeGewinner() {
         t.color(255,0,0);  
         t.text("Computer hat gewonnen!");
         t.right(90);
+        System.out.println("Computer hat gewonnen!");
+        spielBeendet = true;
+        frageNachNeuemSpiel();
         return "Computer hat gewonnen!";
     } else if (!kiHatSchiffe) {
         //t.reset();
@@ -466,10 +476,80 @@ public String pruefeGewinner() {
         t.color(0,255,0);
         t.text("Sie haben gewonnen");
         t.right(90);
+        System.out.println("Sie haben gewonnen!");
+        spielBeendet = true;
+        frageNachNeuemSpiel();
         return "Sie haben gewonnen!";
     }
     return null; // Noch kein Gewinner
 }
 
+private void frageNachNeuemSpiel() {
+        Scanner scanner = new Scanner(System.in);
+        t.moveTo(250,540);
+        t.textSize = 12;
+        t.left(90);
+        t.color(0,255,0);
+        t.text("Geben Sie 1 ein, um ein neues Spiel zu starten, oder 2, um das Spiel zu beenden." );
+        t.right(90);
+        System.out.println("Geben Sie 1 ein, um ein neues Spiel zu starten, oder 2, um das Spiel zu beenden.");
+
+        String antwort = scanner.nextLine();
+
+        switch (antwort) {
+            case "1":
+                System.out.println("Neues Spiel wird gestartet...");
+                neuesSpielStarten();
+                break;
+            case "2":
+                System.out.println("Das Spiel wird beendet.");
+                return;
+            default:
+                System.out.println("Ungültige Eingabe. Bitte geben Sie 1 oder 2 ein.");
+                frageNachNeuemSpiel();
+                break;
+        }
+    }
+
+    private void neuesSpielStarten() {
+        t.reset();
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                spielfeldKI[i][j] = '~';  // "~" für Wasser
+                spielfeldSpieler[i][j] = '~';   // "~" für Wasser
+            }
+        }
+        platzierteSchiffeSpieler = 0;
+        kiSchiffePlatziert = false;
+        zuegeDesSpielers = 0;
+        spielBeendet = false;
+        schiffeSpieler.clear();
+        schiffeKI.clear();
+        zeichneStartbildschirm();  // Zeigt den Startbildschirm an
+        // 2. Verzögerung von 20 Sekunden
+    try {
+        Thread.sleep(20000); // 20 Sekunden warten
+    } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+    }
+
+    // 3. Startbildschirm leeren und Spielfelder anzeigen
+    t.reset(); // Entfernt den Startbildschirm
+
+        spielfeldTurtle("Spieler");  // Zeigt das Spielfeld des Spielers
+        spielfeldTurtle("KI");  // Zeigt das Spielfeld der KI
+        // Neues Spielfeld erstellen und starten
+        //System.out.println("Spielfeld wird neu erstellt...");
+       // Spielfeld neuesSpielfeld = new Spielfeld();
+
+       ki.sichtbaresSpielfeldKI = new char[10][10];
+        for (int zeile = 0; zeile < 10; zeile++) {
+            for (int spalte = 0; spalte < 10; spalte++) {
+                ki.sichtbaresSpielfeldKI[zeile][spalte] = '~'; // Alles unbekannt
+            }
+        }
+        ki.letzteTreffer.clear();
+       // spielfeld.zuegeDesSpielers = 0; // Anfangszustand
+    }
 
 }

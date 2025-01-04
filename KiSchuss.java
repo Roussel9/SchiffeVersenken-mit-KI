@@ -2,9 +2,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 class KI {
-    private char[][] sichtbaresSpielfeldKI;
-    private Spielfeld spielfeld;
-    private List<int[]> letzteTreffer = new ArrayList<>(); // Speichert die Positionen der letzten Treffer
+    public char[][] sichtbaresSpielfeldKI;
+    public Spielfeld spielfeld;
+    public List<int[]> letzteTreffer = new ArrayList<>(); // Speichert die Positionen der letzten Treffer
 
     KI(Spielfeld spielfeld) {
         this.spielfeld = spielfeld;
@@ -21,6 +21,11 @@ class KI {
 
     // KI führt ihre drei Züge aus
     public void macheKIZuege() {
+        if (spielfeld.spielBeendet) {
+        System.out.println("Das Spiel ist bereits beendet. Keine Züge mehr möglich.");
+        return;
+    }
+
         for (int i = 0; i < 3; i++) { // KI macht drei Züge
             int[] zug = findeBestenZug(); // Minimax-basierten Zug finden
             int zeile = zug[0];
@@ -35,14 +40,12 @@ class KI {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
+           // String gewinner = spielfeld.pruefeGewinner();
         }
         spielfeld.zuegeDesSpielers = 0; // Spieler kann danach wieder spielen
     // Gewinnerprüfung nach dem Schuss
-String gewinner = spielfeld.pruefeGewinner();
-if (gewinner != null) {
-    System.out.println(gewinner);
-    //System.exit(0); // Spiel beenden
-}
+//String gewinner = spielfeld.pruefeGewinner();
+
 
     }
 
@@ -163,6 +166,11 @@ if (gewinner != null) {
             spielfeld.zeichneTreffer(zeile, spalte,"Spieler");
             // Prüfen und Markieren der zerstörten Schiffe des Spielers
             spielfeld.checkeUndMarkiereVollstaendigZerstörteSchiffeSpieler();
+             String gewinner = spielfeld.pruefeGewinner();
+            if (gewinner != null) {
+    System.out.println(gewinner);
+    //System.exit(0); // Spiel beenden
+}
         } else {
             System.out.println("KI Fehlschuss bei (" + zeile + ", " + spalte + ")");
             sichtbaresSpielfeldKI[zeile][spalte] = 'O'; // Fehlschuss sichtbar machen
