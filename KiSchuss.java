@@ -1,11 +1,15 @@
+//Kopie für letzte treffer methode schussAufNachbar und if anfang findenBestenzug hinzugefugt
 import java.util.ArrayList;
 import java.util.List;
 
 class KI {
     public char[][] sichtbaresSpielfeldKI;
     public Spielfeld spielfeld;
-    public List<int[]> letzteTreffer = new ArrayList<>(); // Speichert die Positionen der letzten Treffer
-
+    public List<int[]> letzteTreffer = new ArrayList<>();
+    public boolean schiffRichtungGefunden = false; // Gibt an, ob eine Richtung erkannt wurde
+    public boolean istHorizontal = false; // Speichert die Richtung, falls gefunden
+    private boolean alleMittelGetroffen = false; // Flag, um zu verfolgen, ob alle mittleren Felder getroffen wurden
+    private List<int[]> letzteTrefferKopie = new ArrayList<>(letzteTreffer);//wenn Schiffe nebeneinander sind und eine richtung von 2 treffer aber unterschiedliche Schiffe
     KI(Spielfeld spielfeld) {
         this.spielfeld = spielfeld;
 
@@ -15,491 +19,284 @@ class KI {
                 sichtbaresSpielfeldKI[zeile][spalte] = '~'; // Alles unbekannt
             }
         }
-
         spielfeld.zuegeDesSpielers = 0; // Anfangszustand
     }
 
     // KI führt ihre drei Züge aus
     public void macheKIZuege() {
         if (spielfeld.spielBeendet) {
-        System.out.println("Das Spiel ist bereits beendet. Keine Züge mehr möglich.");
-        return;
-    }
+            System.out.println("Das Spiel ist bereits beendet. Keine Züge mehr möglich.");
+            return;
+        }
 
-        for (int i = 0; i < 3; i++) { // KI macht drei Züge
-            int[] zug = findeBestenZug(); // Minimax-basierten Zug finden
+        for (int i = 0; i < 3; i++) {// KI macht drei Züge
+            if(spielfeld.schiffeSpieler.isEmpty()){
+                break;
+            }
+            int[] zug = findeBestenZug();
             int zeile = zug[0];
             int spalte = zug[1];
 
-            // Schuss der KI
-            macheSchussKI(zeile, spalte);
+            if (istGueltigerZug(zeile, spalte)) {
+                macheSchussKI(zeile, spalte);
+            }
 
-            // Wartezeit zwischen Zügen der KI (realistischere Simulation)
+            // Wartezeit zwischen Zügen der KI
             try {
-                Thread.sleep(1000); // 1 Sekunde Pause zwischen den Zügen
+                Thread.sleep(1000); // 1 Sekunde Pause
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
-           // String gewinner = spielfeld.pruefeGewinner();
         }
         spielfeld.zuegeDesSpielers = 0; // Spieler kann danach wieder spielen
-    // Gewinnerprüfung nach dem Schuss
-//String gewinner = spielfeld.pruefeGewinner();
+    }
 
-
+    private boolean istGueltigerZug(int zeile, int spalte) {
+        return sichtbaresSpielfeldKI[zeile][spalte] == '~';
     }
 
     private int[] findeBestenZug() {
-        // 1. Wenn es letzte Treffer gibt, fokussiere dich darauf
-        if (!letzteTreffer.isEmpty()) {
-            return findeGezieltenZug();
+        if( !schiffRichtungGefunden){ // nebeneinander Schiffe ganz zerstören zu können
+           return schussAufNachbar();
         }
 
-        // 2. Sonst suche das beste Feld basierend auf der heuristischen Bewertung
-        return findeHeuristischenZug();
+        if (!letzteTreffer.isEmpty() ) {
+            return findeGezieltenZug();
+        }
+        if (!alleMittelGetroffen) {
+            return findeHeuristischenZug(); // Suche nach mittleren Feldern
+        }
+        return findeEckenZug(); // Suche nach Ecken, wenn alle mittleren Felder getroffen sind
     }
 
     private int[] findeGezieltenZug() {
+       // List<int[]> jederTrefferListe = new ArrayList<>();
+        if (!letzteTreffer.isEmpty() ) {
+            int[] ersteTreffer = letzteTreffer.get(0);
+
+            // Wenn eine Richtung bereits erkannt wurde, ziele weiter in dieser Richtung
+            if (schiffRichtungGefunden) {
+                if (istHorizontal) {
+                    return schießeHorizontalWeiter();
+                } else {
+                    return schießeVertikalWeiter();
+                }
+            }
+
+            // Wenn noch keine Richtung erkannt wurde, versuche, angrenzende Felder zu treffen
+            for (int[] richtung : new int[][]{{0, 1}, {0, -1}, {1, 0}, {-1, 0}}) {
+                int neueZeile = ersteTreffer[0] + richtung[0];
+                int neueSpalte = ersteTreffer[1] + richtung[1];
+
+                if (neueZeile >= 0 && neueZeile < 10 && neueSpalte >= 0 && neueSpalte < 10 &&
+                        istGueltigerZug(neueZeile, neueSpalte)) {
+                    return new int[]{neueZeile, neueSpalte};
+                }
+            }
+        }
+
+       /* if(schiffRichtungGefunden){
+            List<int[]> jederTrefferListe = new ArrayList<>();
+            for(int[]trefferArray : letzteTreffer){
+                jederTrefferListe.add(trefferArray);
+                letzteTreffer = jederTrefferListe;
+                schiffRichtungGefunden = false;
+                findeGezieltenZug();
+            }
+        }*/
+        return findeHeuristischenZug();
+    }
+
+    private int[] schießeHorizontalWeiter() {
         int[] ersteTreffer = letzteTreffer.get(0);
         int[] letzteTrefferPosition = letzteTreffer.get(letzteTreffer.size() - 1);
 
-        int zeile = ersteTreffer[0];
-        int spalte = ersteTreffer[1];
-
-        // 1. Prüfe, ob es eine Richtung (horizontal oder vertikal) gibt
-        boolean horizontal = letzteTreffer.size() > 1 && ersteTreffer[0] == letzteTrefferPosition[0];
-        boolean vertikal = letzteTreffer.size() > 1 && ersteTreffer[1] == letzteTrefferPosition[1];
-
-        // 2. Schieße in der identifizierten Richtung weiter
-        if (horizontal) {
-            // Versuche rechts
-            int rechteSpalte = letzteTrefferPosition[1] + 1;
-            if (rechteSpalte < 10 && sichtbaresSpielfeldKI[zeile][rechteSpalte] == '~') {
-                return new int[]{zeile, rechteSpalte};
-            }
-
-            // Versuche links
-            int linkeSpalte = ersteTreffer[1] - 1;
-            if (linkeSpalte >= 0 && sichtbaresSpielfeldKI[zeile][linkeSpalte] == '~') {
-                return new int[]{zeile, linkeSpalte};
-            }
+        // Versuche rechts weiter zu schießen
+        int rechteSpalte = letzteTrefferPosition[1] + 1;
+        if (rechteSpalte < 10 && istGueltigerZug(ersteTreffer[0], rechteSpalte)) {
+            return new int[]{ersteTreffer[0], rechteSpalte};
         }
 
-        if (vertikal) {
-            // Versuche unten
-            int untereZeile = letzteTrefferPosition[0] + 1;
-            if (untereZeile < 10 && sichtbaresSpielfeldKI[untereZeile][spalte] == '~') {
-                return new int[]{untereZeile, spalte};
-            }
-
-            // Versuche oben
-            int obereZeile = ersteTreffer[0] - 1;
-            if (obereZeile >= 0 && sichtbaresSpielfeldKI[obereZeile][spalte] == '~') {
-                return new int[]{obereZeile, spalte};
-            }
+        // Versuche links weiter zu schießen
+        int minSpalte = letzteTreffer.stream().mapToInt(treffer -> treffer[1]).min().orElse(-1); // Extrahiere die Spaltenwerte // Finde das Minimum// Standardwert, falls die Liste leer ist
+        int linkeSpalte = minSpalte - 1;
+        if (linkeSpalte >= 0 && istGueltigerZug(ersteTreffer[0], linkeSpalte)) {
+            return new int[]{ersteTreffer[0], linkeSpalte};
         }
 
-        // 3. Wenn keine Richtung erkennbar ist, prüfe alle angrenzenden Felder
-        for (int[] richtung : new int[][]{{0, 1}, {1, 0}, {0, -1}, {-1, 0}}) {
-            int neueZeile = letzteTrefferPosition[0] + richtung[0];
-            int neueSpalte = letzteTrefferPosition[1] + richtung[1];
-
-            if (neueZeile >= 0 && neueZeile < 10 && neueSpalte >= 0 && neueSpalte < 10 &&
-                    sichtbaresSpielfeldKI[neueZeile][neueSpalte] == '~') {
-                return new int[]{neueZeile, neueSpalte};
-            }
+        if(schiffRichtungGefunden){//wenn Schiffe nebeneinander sind und eine richtung von 2 treffer aber unterschiedliche Schiffe
+           // System.out.println("RUUU");
+            letzteTrefferKopie = letzteTreffer;
+             return schussAufNachbar();
         }
 
-        // 4. Fallback, falls keine Treffer gefunden werden
+        // Fallback
         return findeHeuristischenZug();
     }
 
+    private int[] schießeVertikalWeiter() {
+        int[] ersteTreffer = letzteTreffer.get(0);
+        int[] letzteTrefferPosition = letzteTreffer.get(letzteTreffer.size() - 1);
+
+        // Versuche unten weiter zu schießen
+        int untereZeile = letzteTrefferPosition[0] + 1;
+        if (untereZeile < 10 && istGueltigerZug(untereZeile, ersteTreffer[1])) {
+            return new int[]{untereZeile, ersteTreffer[1]};
+        }
+
+        // Versuche oben weiter zu schießen
+        int minZeile = letzteTreffer.stream().mapToInt(treffer -> treffer[0]).min().orElse(-1); // Extrahiere die Zeilenwerte // Finde das Minimum// Standardwert, falls die Liste leer ist
+        
+        int obereZeile = minZeile - 1;
+        if (obereZeile >= 0 && istGueltigerZug(obereZeile, ersteTreffer[1])) {
+            return new int[]{obereZeile, ersteTreffer[1]};
+        }
+
+        if(schiffRichtungGefunden){//wenn Schiffe nebeneinander sind und eine richtung von 2 treffer aber unterschiedliche Schiffe
+           // System.out.println("RUUU");
+            letzteTrefferKopie = letzteTreffer;
+             return schussAufNachbar();
+        }
+
+        // Fallback
+        return findeHeuristischenZug();
+    }
+
+    private int[] schussAufNachbar(){//wenn Schiffe nebeneinander sind und eine richtung von 2 treffer aber unterschiedliche Schiffe
+       // letzteTrefferKopie = letzteTreffer;
+        //List<int[]> letzteTrefferKopie = new ArrayList<>(letzteTreffer);
+      if(letzteTreffer.size() == 1){ // Gezielte zug für jeden treffer der verschiedene schiffe machen 
+        return findeGezieltenZug();
+      }
+       
+       if(!letzteTrefferKopie.isEmpty()){
+            for (int[] trefferArray: letzteTrefferKopie){
+             List<int[]> jederTrefferListe = new ArrayList<>();
+                jederTrefferListe.add(trefferArray);
+                letzteTreffer = jederTrefferListe;
+                schiffRichtungGefunden = false;
+                letzteTrefferKopie.remove(trefferArray);
+               return findeGezieltenZug();
+            }
+       }
+        return findeGezieltenZug();
+    }
+
     private int[] findeHeuristischenZug() {
-        int besterWert = Integer.MIN_VALUE;
-        int besteZeile = -1;
-        int besteSpalte = -1;
+        // Definieren der Quadrate des Spielfeldes in 3x3 Regionen
+        int[][] quadrate = {
+            {0, 0, 2, 2}, {0, 3, 2, 5}, {0, 6, 2, 8},
+            {3, 0, 5, 2}, {3, 3, 5, 5}, {3, 6, 5, 8},
+            {6, 0, 8, 2}, {6, 3, 8, 5}, {6, 6, 8, 8},
+            {9, 0, 9, 2}, {9, 3, 9, 5}, {9, 6, 9, 8}
+        };
 
-        // Durchlaufe alle Felder, um das beste Feld zu finden
-        for (int zeile = 0; zeile < 10; zeile++) {
-            for (int spalte = 0; spalte < 10; spalte++) {
-                if (sichtbaresSpielfeldKI[zeile][spalte] == '~') {
-                    int wert = bewerteFeld(zeile, spalte);
-                    if (wert > besterWert) {
-                        besterWert = wert;
-                        besteZeile = zeile;
-                        besteSpalte = spalte;
-                    }
-                }
+        // Durchlaufe jedes Quadrat und schieße zuerst in die Mitte des Quadrats
+        for (int[] quadrat : quadrate) {
+            int mitteZeile = (quadrat[0] + quadrat[2]) / 2;
+            int mitteSpalte = (quadrat[1] + quadrat[3]) / 2;
+            if (istGueltigerZug(mitteZeile, mitteSpalte)) {
+                return new int[]{mitteZeile, mitteSpalte};
             }
         }
 
-        return new int[]{besteZeile, besteSpalte};
+        alleMittelGetroffen = true; // Alle mittleren Felder wurden getroffen
+        return findeEckenZug(); // Falls alle Mittel getroffen sind, gehe zu den Ecken
     }
 
-    private int bewerteFeld(int zeile, int spalte) {
-        int wert = 0;
+    private int[] findeEckenZug() {
+        // Durchlaufe jedes Quadrat und schieße dann auf die Ecken
+        int[][] quadrate = {
+            {0, 0, 2, 2}, {0, 3, 2, 5}, {0, 6, 2, 9},
+            {3, 0, 5, 2}, {3, 3, 5, 5}, {3, 6, 5, 9},
+            {6, 0, 8, 2}, {6, 3, 8, 5}, {6, 6, 8, 9},
+            {9, 0, 9, 2}, {9, 3, 9, 5}, {9, 6, 9, 9}
+        };
 
-        // 1. Bonuspunkte für Felder in der Mitte des Spielfelds
-        wert += 10 - Math.abs(zeile - 4) - Math.abs(spalte - 4);
+        for (int[] quadrat : quadrate) {
+            int zeilenStart = quadrat[0];
+            int spaltenStart = quadrat[1];
+            int zeilenEnde = quadrat[2];
+            int spaltenEnde = quadrat[3];
 
-        // 2. Bonuspunkte für angrenzende Treffer
-        int[][] richtungen = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
-        for (int[] richtung : richtungen) {
-            int neueZeile = zeile + richtung[0];
-            int neueSpalte = spalte + richtung[1];
-            if (neueZeile >= 0 && neueZeile < 10 && neueSpalte >= 0 && neueSpalte < 10) {
-                if (sichtbaresSpielfeldKI[neueZeile][neueSpalte] == 'X') {
-                    wert += 15; // Bonus für angrenzende Treffer
+            if (istGueltigerZug(zeilenStart, spaltenEnde)) {
+                return new int[]{zeilenStart, spaltenEnde};
+            }
+            
+        }
+
+        for (int[] quadrat : quadrate) {
+            int zeilenStart = quadrat[0];
+            int spaltenStart = quadrat[1];
+            int zeilenEnde = quadrat[2];
+            int spaltenEnde = quadrat[3];
+
+            if (istGueltigerZug(zeilenStart, spaltenStart)) {
+                return new int[]{zeilenStart, spaltenStart};
+            }
+            
+        }
+
+        for (int[] quadrat : quadrate) {
+            int zeilenStart = quadrat[0];
+            int spaltenStart = quadrat[1];
+            int zeilenEnde = quadrat[2];
+            int spaltenEnde = quadrat[3];
+
+            if (istGueltigerZug(zeilenEnde, spaltenEnde)) {
+                return new int[]{zeilenEnde, spaltenEnde};
+            }
+        }
+
+
+        for (int[] quadrat : quadrate) {
+            int zeilenStart = quadrat[0];
+            int spaltenStart = quadrat[1];
+            int zeilenEnde = quadrat[2];
+            int spaltenEnde = quadrat[3];
+
+            if (istGueltigerZug(zeilenEnde, spaltenStart)) {
+                return new int[]{zeilenEnde, spaltenStart};
+            }
+        }
+
+        // Letzter Fallback: Überprüfe alle Felder des Spielfelds
+        for (int zeile = 9; zeile >= 0; zeile--) {
+            for (int spalte = 9; spalte >= 0; spalte--) {
+                if (istGueltigerZug(zeile, spalte)) {
+                return new int[]{zeile, spalte};
                 }
             }
         }
 
-        return wert;
+        return new int[]{-1, -1}; // Keine gültigen Züge mehr
     }
 
     private void macheSchussKI(int zeile, int spalte) {
-        if (spielfeld.spielfeldSpieler[zeile][spalte] == 'S') { // Überprüfung des Spieler-Spielfelds
+        if (spielfeld.spielfeldSpieler[zeile][spalte] == 'S') { // Treffer
             System.out.println("KI Treffer bei (" + zeile + ", " + spalte + ")");
-            sichtbaresSpielfeldKI[zeile][spalte] = 'X'; // Treffer sichtbar machen für KI
-            spielfeld.spielfeldSpieler[zeile][spalte] = 'X'; // Original-Spielfeld anpassen
-            letzteTreffer.add(new int[]{zeile, spalte}); // Speichern des letzten Treffers
-            spielfeld.zeichneTreffer(zeile, spalte,"Spieler");
-            // Prüfen und Markieren der zerstörten Schiffe des Spielers
-            spielfeld.checkeUndMarkiereVollstaendigZerstörteSchiffeSpieler();
-             String gewinner = spielfeld.pruefeGewinner();
+            sichtbaresSpielfeldKI[zeile][spalte] = 'X';
+            spielfeld.spielfeldSpieler[zeile][spalte] = 'X';
+            spielfeld.zeichneTreffer(zeile, spalte, "Spieler");
+            letzteTreffer.add(new int[]{zeile, spalte});
+             spielfeld.checkeUndMarkiereVollstaendigZerstörteSchiffeSpieler();
+            if (letzteTreffer.size() > 1) {
+                schiffRichtungGefunden = true;
+                istHorizontal = letzteTreffer.get(0)[0] == letzteTreffer.get(1)[0];
+            }
+
+           
+            String gewinner = spielfeld.pruefeGewinner();
             if (gewinner != null) {
-    System.out.println(gewinner);
-    //System.exit(0); // Spiel beenden
-}
-        } else {
+                System.out.println(gewinner);
+            }
+
+        } else { // Fehlschuss
             System.out.println("KI Fehlschuss bei (" + zeile + ", " + spalte + ")");
-            sichtbaresSpielfeldKI[zeile][spalte] = 'O'; // Fehlschuss sichtbar machen
-            spielfeld.spielfeldSpieler[zeile][spalte] = 'O'; // Original-Spielfeld anpassen
-            spielfeld.zeichneFehlschuss(zeile, spalte,"Spieler");
+            sichtbaresSpielfeldKI[zeile][spalte] = 'O';
+            spielfeld.spielfeldSpieler[zeile][spalte] = 'O';
+            spielfeld.zeichneFehlschuss(zeile, spalte, "Spieler");
         }
     }
 }
 
-
-
-
-/*
-import java.util.ArrayList;
-import java.util.List;
-
-class KI {
-    private char[][] sichtbaresSpielfeldKI;
-    private Spielfeld spielfeld;
-    private List<int[]> letzteTreffer = new ArrayList<>(); // Speichert die Positionen der letzten Treffer
-    private boolean verfolgtSchiff = false; // Gibt an, ob die KI ein Schiff verfolgt
-    private boolean horizontalVerfolgung = false; // Gibt die Richtung der Verfolgung an
-    private boolean vertikalVerfolgung = false;
-    
-    // Liste der möglichen Züge, die weit voneinander entfernt liegen
-    private List<int[]> zugListe = new ArrayList<>();
-    private int zugIndex = 0; // Zeigt den aktuellen Zug an
-    
-    KI(Spielfeld spielfeld) {
-        this.spielfeld = spielfeld;
-
-        sichtbaresSpielfeldKI = new char[10][10];
-        for (int zeile = 0; zeile < 10; zeile++) {
-            for (int spalte = 0; spalte < 10; spalte++) {
-                sichtbaresSpielfeldKI[zeile][spalte] = '~'; // Alles unbekannt
-            }
-        }
-
-        spielfeld.zuegeDesSpielers = 0; // Anfangszustand
-        
-        // Initialisiere die Liste der Felder, die weit auseinander liegen
-        erstelleZugListe();
-    }
-
-    // Funktion zur Erstellung der Zugliste mit weit auseinander liegenden Feldern
-    private void erstelleZugListe() {
-        // Hier definieren wir gezielt Felder, die weit voneinander entfernt liegen
-        int[][] felder = {
-            {0, 0}, {0, 9}, {9, 0}, {9, 9},  // Ecken des Spielfelds
-            {1, 3}, {3, 1}, {7, 7}, {5, 0},  // Weitere zufällige Felder, die auseinander liegen
-            {2, 8}, {8, 2}, {4, 6}, {6, 4}
-        };
-
-        for (int[] feld : felder) {
-            zugListe.add(feld);
-        }
-    }
-
-    public void macheKIZuege() {
-        for (int i = 0; i < 3; i++) { // KI macht drei Züge
-            int[] zug = findeBestenZug(); // Minimax-basierten Zug finden
-            int zeile = zug[0];
-            int spalte = zug[1];
-
-            // Schuss der KI
-            macheSchussKI(zeile, spalte);
-
-            // Wartezeit zwischen Zügen der KI (realistischere Simulation)
-            try {
-                Thread.sleep(1000); // 1 Sekunde Pause zwischen den Zügen
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-        spielfeld.zuegeDesSpielers = 0; // Spieler kann danach wieder spielen
-    }
-
-    private int[] findeBestenZug() {
-        // Wenn ein Schiff verfolgt wird, fokussiere dich auf die Verfolgung des Schiffs
-        if (verfolgtSchiff) {
-            return findeGezieltenZug();
-        }
-
-        // Wenn keine gezielte Verfolgung vorliegt, wähle den nächsten Zug aus der Liste
-        return findeZugAusListe();
-    }
-
-    private int[] findeGezieltenZug() {
-        // Falls ein Treffer gemacht wurde, überprüfen wir, ob wir noch in der gleichen Richtung schießen müssen.
-        if (!letzteTreffer.isEmpty()) {
-            int[] letzteTrefferPosition = letzteTreffer.get(letzteTreffer.size() - 1);
-            int zeile = letzteTrefferPosition[0];
-            int spalte = letzteTrefferPosition[1];
-
-            // Wenn horizontal verfolgt wird
-            if (horizontalVerfolgung) {
-                // Versuche nach rechts
-                if (spalte + 1 < 10 && sichtbaresSpielfeldKI[zeile][spalte + 1] == '~') {
-                    return new int[]{zeile, spalte + 1};
-                }
-
-                // Versuche nach links
-                if (spalte - 1 >= 0 && sichtbaresSpielfeldKI[zeile][spalte - 1] == '~') {
-                    return new int[]{zeile, spalte - 1};
-                }
-            }
-
-            // Wenn vertikal verfolgt wird
-            if (vertikalVerfolgung) {
-                // Versuche nach unten
-                if (zeile + 1 < 10 && sichtbaresSpielfeldKI[zeile + 1][spalte] == '~') {
-                    return new int[]{zeile + 1, spalte};
-                }
-
-                // Versuche nach oben
-                if (zeile - 1 >= 0 && sichtbaresSpielfeldKI[zeile - 1][spalte] == '~') {
-                    return new int[]{zeile - 1, spalte};
-                }
-            }
-        }
-
-        // Wenn keine Verfolgung erfolgt, gehe zu einem neuen Zug aus der Liste
-        return findeZugAusListe();
-    }
-
-    private int[] findeZugAusListe() {
-        if (zugIndex < zugListe.size()) {
-            // Nächster Zug aus der Liste, der weit auseinander liegende Felder berücksichtigt
-            int[] zug = zugListe.get(zugIndex);
-            zugIndex++; // Nächsten Zug vorbereiten
-            return zug;
-        }
-        // Falls keine Züge mehr verfügbar sind, gebe ein Standardfeld zurück
-        return new int[]{0, 0};
-    }
-
-    private void macheSchussKI(int zeile, int spalte) {
-        if (spielfeld.spielfeldSpieler[zeile][spalte] == 'S') { // Überprüfung des Spieler-Spielfelds
-            System.out.println("KI Treffer bei (" + zeile + ", " + spalte + ")");
-            sichtbaresSpielfeldKI[zeile][spalte] = 'X'; // Treffer sichtbar machen für KI
-            spielfeld.spielfeldSpieler[zeile][spalte] = 'X'; // Original-Spielfeld anpassen
-            letzteTreffer.add(new int[]{zeile, spalte}); // Speichern des letzten Treffers
-
-            // Wenn ein Schiff getroffen wurde, verfolge das Schiff in der Richtung
-            if (letzteTreffer.size() == 1) {
-                // Anfang der Verfolgung
-                verfolgtSchiff = true;
-                horizontalVerfolgung = true; // Initiale Annahme: Horizontal
-            }
-
-            // Prüfen und Markieren der zerstörten Schiffe des Spielers
-            spielfeld.checkeUndMarkiereVollstaendigZerstörteSchiffeSpieler();
-        } else {
-            System.out.println("KI Fehlschuss bei (" + zeile + ", " + spalte + ")");
-            sichtbaresSpielfeldKI[zeile][spalte] = 'O'; // Fehlschuss sichtbar machen
-            spielfeld.spielfeldSpieler[zeile][spalte] = 'O'; // Original-Spielfeld anpassen
-        }
-    }
-}
-*/
-
-/*
-import java.util.ArrayList;
-import java.util.List;
-
-class KI {
-    private char[][] sichtbaresSpielfeldKI;
-    private Spielfeld spielfeld;
-    private List<int[]> letzteTreffer = new ArrayList<>(); // Speichert die Positionen der letzten Treffer
-    private boolean verfolgtSchiff = false; // Gibt an, ob die KI ein Schiff verfolgt
-    private boolean horizontalVerfolgung = false; // Gibt die Richtung der Verfolgung an
-    private boolean vertikalVerfolgung = false;
-    
-    // Liste der möglichen Züge, die weit voneinander entfernt liegen
-    private List<int[]> zugListe = new ArrayList<>();
-    private int zugIndex = 0; // Zeigt den aktuellen Zug an
-    
-    KI(Spielfeld spielfeld) {
-        this.spielfeld = spielfeld;
-
-        sichtbaresSpielfeldKI = new char[10][10];
-        for (int zeile = 0; zeile < 10; zeile++) {
-            for (int spalte = 0; spalte < 10; spalte++) {
-                sichtbaresSpielfeldKI[zeile][spalte] = '~'; // Alles unbekannt
-            }
-        }
-
-        spielfeld.zuegeDesSpielers = 0; // Anfangszustand
-        
-        // Initialisiere die Liste der Felder, die weit auseinander liegen
-        erstelleZugListe();
-    }
-
-    // Funktion zur Erstellung der Zugliste mit weit auseinander liegenden Feldern
-    private void erstelleZugListe() {
-        // Hier definieren wir gezielt Felder, die weit voneinander entfernt liegen
-        int[][] felder = {
-            {0, 0}, {0, 9}, {9, 0}, {9, 9},  // Ecken des Spielfelds
-            {1, 3}, {3, 1}, {7, 7}, {5, 0},  // Weitere zufällige Felder, die auseinander liegen
-            {2, 8}, {8, 2}, {4, 6}, {6, 4}
-        };
-
-        for (int[] feld : felder) {
-            zugListe.add(feld);
-        }
-    }
-
-    public void macheKIZuege() {
-        for (int i = 0; i < 3; i++) { // KI macht drei Züge
-            int[] zug = findeBestenZug(); // Minimax-basierten Zug finden
-            int zeile = zug[0];
-            int spalte = zug[1];
-
-            // Schuss der KI
-            macheSchussKI(zeile, spalte);
-
-            // Wartezeit zwischen Zügen der KI (realistischere Simulation)
-            try {
-                Thread.sleep(1000); // 1 Sekunde Pause zwischen den Zügen
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-        spielfeld.zuegeDesSpielers = 0; // Spieler kann danach wieder spielen
-    }
-
-    private int[] findeBestenZug() {
-        // Wenn ein Schiff verfolgt wird, fokussiere dich auf die Verfolgung des Schiffs
-        if (verfolgtSchiff) {
-            return findeGezieltenZug();
-        }
-
-        // Wenn keine gezielte Verfolgung vorliegt, wähle den nächsten Zug aus der Liste
-        return findeZugAusListe();
-    }
-
-    private int[] findeGezieltenZug() {
-        // Falls ein Treffer gemacht wurde, überprüfen wir, ob wir noch in der gleichen Richtung schießen müssen.
-        if (!letzteTreffer.isEmpty()) {
-            int[] letzteTrefferPosition = letzteTreffer.get(letzteTreffer.size() - 1);
-            int zeile = letzteTrefferPosition[0];
-            int spalte = letzteTrefferPosition[1];
-
-            // Wenn horizontal verfolgt wird
-            if (horizontalVerfolgung) {
-                // Versuche nach rechts
-                if (spalte + 1 < 10 && sichtbaresSpielfeldKI[zeile][spalte + 1] == '~') {
-                    return new int[]{zeile, spalte + 1};
-                }
-
-                // Versuche nach links
-                if (spalte - 1 >= 0 && sichtbaresSpielfeldKI[zeile][spalte - 1] == '~') {
-                    return new int[]{zeile, spalte - 1};
-                }
-            }
-
-            // Wenn vertikal verfolgt wird
-            if (vertikalVerfolgung) {
-                // Versuche nach unten
-                if (zeile + 1 < 10 && sichtbaresSpielfeldKI[zeile + 1][spalte] == '~') {
-                    return new int[]{zeile + 1, spalte};
-                }
-
-                // Versuche nach oben
-                if (zeile - 1 >= 0 && sichtbaresSpielfeldKI[zeile - 1][spalte] == '~') {
-                    return new int[]{zeile - 1, spalte};
-                }
-            }
-        }
-
-        // Wenn keine Verfolgung erfolgt, gehe zu einem neuen Zug aus der Liste
-        return findeZugAusListe();
-    }
-
-    private int[] findeZugAusListe() {
-        if (zugIndex < zugListe.size()) {
-            // Nächster Zug aus der Liste, der weit auseinander liegende Felder berücksichtigt
-            int[] zug = zugListe.get(zugIndex);
-            zugIndex++; // Nächsten Zug vorbereiten
-            return zug;
-        }
-
-        // Falls keine Züge mehr verfügbar sind, gebe ein Standardfeld zurück
-        return new int[]{0, 0};
-    }
-
-    private void macheSchussKI(int zeile, int spalte) {
-        if (spielfeld.spielfeldSpieler[zeile][spalte] == 'S') { // Überprüfung des Spieler-Spielfelds
-            System.out.println("KI Treffer bei (" + zeile + ", " + spalte + ")");
-            sichtbaresSpielfeldKI[zeile][spalte] = 'X'; // Treffer sichtbar machen für KI
-            spielfeld.spielfeldSpieler[zeile][spalte] = 'X'; // Original-Spielfeld anpassen
-            letzteTreffer.add(new int[]{zeile, spalte}); // Speichern des letzten Treffers
-
-            // Wenn ein Schiff getroffen wurde, verfolge das Schiff in der Richtung
-            if (letzteTreffer.size() == 1) {
-                // Anfang der Verfolgung
-                verfolgtSchiff = true;
-                horizontalVerfolgung = true; // Initiale Annahme: Horizontal
-            }
-
-            // Prüfen und Markieren der zerstörten Schiffe des Spielers
-            spielfeld.checkeUndMarkiereVollstaendigZerstörteSchiffeSpieler();
-        } else {
-            System.out.println("KI Fehlschuss bei (" + zeile + ", " + spalte + ")");
-            sichtbaresSpielfeldKI[zeile][spalte] = 'O'; // Fehlschuss sichtbar machen
-            spielfeld.spielfeldSpieler[zeile][spalte] = 'O'; // Original-Spielfeld anpassen
-
-            // Wenn ein Fehlschuss ist, überprüfe benachbarte Felder
-            pruefeBenachbarteFelder(zeile, spalte);
-        }
-    }
-
-    // Prüft die benachbarten Felder eines Fehlschusses
-    private void pruefeBenachbarteFelder(int zeile, int spalte) {
-        int[][] benachbarteFelder = {
-            {zeile - 1, spalte}, {zeile + 1, spalte}, {zeile, spalte - 1}, {zeile, spalte + 1}
-        };
-
-        for (int[] feld : benachbarteFelder) {
-            int benachbarteZeile = feld[0];
-            int benachbarteSpalte = feld[1];
-
-            if (benachbarteZeile >= 0 && benachbarteZeile < 10 && benachbarteSpalte >= 0 && benachbarteSpalte < 10) {
-                if (sichtbaresSpielfeldKI[benachbarteZeile][benachbarteSpalte] == '~') {
-                    // Füge benachbartes Feld zur Zugliste hinzu
-                    zugListe.add(new int[]{benachbarteZeile, benachbarteSpalte});
-                }
-            }
-        }
-    }
-}
-*/

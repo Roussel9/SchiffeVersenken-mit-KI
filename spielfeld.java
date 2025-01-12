@@ -15,6 +15,7 @@ public class Spielfeld {
     public boolean kiSchiffePlatziert = false;  // Status, ob die KI ihre Schiffe bereits platziert hat
     public int zuegeDesSpielers = 0; // Zählt die Züge des Spielers in einer Runde
     public boolean spielBeendet = false;
+    //public boolean schiffGanzZerstört = false;
     // Konstruktor: Erstellen und Initialisieren der Spielfelder und SchiffsListe
     public Spielfeld() {
         spielfeldKI = new char[10][10];
@@ -32,9 +33,9 @@ public class Spielfeld {
         // 1. Willkommensnachricht anzeigen
     zeichneStartbildschirm();
 
-    // 2. Verzögerung von 20 Sekunden
+    // 2. Verzögerung von 10 Sekunden
     try {
-        Thread.sleep(10000); // 20 Sekunden warten
+        Thread.sleep(5000); // 10 Sekunden warten
     } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
     }
@@ -151,6 +152,11 @@ public void zeichneStartbildschirm() {
         return;
     }
 
+    if(schiffeKI.isEmpty()){
+        System.out.println("Es gibt kein Schiff auf dem Spielfeld ");
+        return;
+    }
+
         if (zuegeDesSpielers >= 3) {
             System.out.println("Du hast bereits 3 Züge gemacht. Nun ist die KI dran.");
             ki.macheKIZuege();// KI macht ihre drei Züge
@@ -230,6 +236,11 @@ public void zeichneStartbildschirm() {
 }
 
 
+private void entferneTrefferAusListe(List<int[]> liste, int zeile, int spalte) {
+    liste.removeIf(treffer -> treffer[0] == zeile && treffer[1] == spalte);
+}
+
+
     public void checkeUndMarkiereVollstaendigZerstörteSchiffeSpieler() {
         // Durchlaufe die Liste der Schiffe des Spieler mit einer normalen Schleife
     for (int j = 0; j < schiffeSpieler.size(); j++) {
@@ -258,11 +269,46 @@ public void zeichneStartbildschirm() {
 
         // Wenn das Schiff vollständig zerstört wurde
         if (zerstört) {
-            // Rote Linie auf das zerstörte Schiff zeichnen
-            System.out.println("Ein Schiff des Spielers komplett zerstört");
-            zeichneRoteLinie(schiff,"Spieler");
-            schiffeSpieler.remove(schiff); // Schiff aus der Liste der nicht zerstörten Schiffe entfernen
-             j--; // Reduziere den Index, um das nächste Schiff korrekt zu überprüfen (wegen Entfernen)
+
+            if(schiff.getLaenge() < ki.letzteTreffer.size() ){// falls ein schiff zerstort ist aber liste von Treffer auch ein Treffer ein anderes Schiff enthalt
+                System.out.println("Ein Schiff des Spielers komplett zerstört");
+                 zeichneRoteLinie(schiff,"Spieler");
+                // int trefferAnderesSchiff = letzteTreffer.size() - schiffeSpieler.get(i).getLaenge();
+                 int beginZeile = schiff.getZeile();
+                 int beginSpalte = schiff.getSpalte();
+                if(schiff.isHorizontal()){
+                    int endeSpalte = beginSpalte + schiff.getLaenge();
+                    for(int i = beginSpalte ; i <= endeSpalte; i++){
+                        entferneTrefferAusListe(ki.letzteTreffer, beginZeile, i);
+                        //ki.letzteTreffer.remove(new int[]{beginZeile,i});
+                    }
+                } else{
+                    int endeZeile = beginZeile + schiff.getLaenge();
+                    for(int i = beginZeile ; i <= endeZeile; i++){
+                        //ki.letzteTreffer.remove(new int[]{i,beginSpalte});
+                       entferneTrefferAusListe(ki.letzteTreffer, i, beginSpalte);
+                    }
+                }
+                // for(int i = letzteTreffer.size())
+               // ki.letzteTreffer.clear(); // Treffer KI zurücksetzen
+                ki.schiffRichtungGefunden = false; //Richtung zurücksetzen
+                ki.istHorizontal = false;
+
+                schiffeSpieler.remove(schiff); // Schiff aus der Liste der nicht zerstörten Schiffe entfernen
+                 j--; // Reduziere den Index, um das nächste Schiff korrekt zu überprüfen (wegen Entfernen)
+            System.out.println(ki.letzteTreffer.size());
+            }else{
+                //    schiffGanzZerstört = true;
+                 // Rote Linie auf das zerstörte Schiff zeichnen
+                System.out.println("Ein Schiff des Spielers komplett zerstört");
+                ki.letzteTreffer.clear(); // Treffer KI zurücksetzen
+                ki.schiffRichtungGefunden = false; //Richtung zurücksetzen
+                ki.istHorizontal = false;
+                zeichneRoteLinie(schiff,"Spieler");
+
+                schiffeSpieler.remove(schiff); // Schiff aus der Liste der nicht zerstörten Schiffe entfernen
+                 j--; // Reduziere den Index, um das nächste Schiff korrekt zu überprüfen (wegen Entfernen)
+            }
         }
     }
 }
@@ -467,7 +513,8 @@ public String pruefeGewinner() {
         System.out.println("Computer hat gewonnen!");
         spielBeendet = true;
         frageNachNeuemSpiel();
-        return "Computer hat gewonnen!";
+        return "";
+        //return "Computer hat gewonnen!";
     } else if (!kiHatSchiffe) {
         //t.reset();
         t.left(90);
@@ -478,8 +525,9 @@ public String pruefeGewinner() {
         t.right(90);
         System.out.println("Sie haben gewonnen!");
         spielBeendet = true;
-        frageNachNeuemSpiel();
-        return "Sie haben gewonnen!";
+       frageNachNeuemSpiel();
+       return "";
+       // return "Sie haben gewonnen!";
     }
     return null; // Noch kein Gewinner
 }
