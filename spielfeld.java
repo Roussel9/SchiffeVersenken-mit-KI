@@ -4,7 +4,7 @@ import java.util.Random;
 
 public class Spielfeld {
     Turtle t = new Turtle(500,600);
-    KI ki;
+    KIMittel ki;
     public char[][] spielfeldSpieler;  // 2D-Array für das Spielfeld des Spielers (10x10)
     public char[][] spielfeldKI;       // 2D-Array für das Spielfeld der KI (10x10)
     public List<Schiff> schiffeSpieler;  // Liste für die Schiffe des Spielers
@@ -12,7 +12,7 @@ public class Spielfeld {
 
     public final int[] schiffLaengen = {2, 3, 4, 5};  // Die Längen der Schiffe
     public int platzierteSchiffeSpieler = 0;  // Anzahl platzierter Schiffe des Spielers
-    public boolean kiSchiffePlatziert = false;  // Status, ob die KI ihre Schiffe bereits platziert hat
+   // public boolean kiSchiffePlatziert = false;  // Status, ob die KI ihre Schiffe bereits platziert hat
     public int zuegeDesSpielers = 0; // Zählt die Züge des Spielers in einer Runde
     public boolean spielBeendet = false;
     //public boolean schiffGanzZerstört = false;
@@ -29,7 +29,7 @@ public class Spielfeld {
                 spielfeldSpieler[i][j] = '~';   // "~" für Wasser
             }
         }
-        ki = new KI(this);  // Neues KI-Objekt wird hier erstellt
+        ki = new KIMittel(this);  // Neues KI-Objekt wird hier erstellt
         // 1. Willkommensnachricht anzeigen
     zeichneStartbildschirm();
 
@@ -105,8 +105,8 @@ public void zeichneStartbildschirm() {
             platzierteSchiffeSpieler++;
 
             // Wenn der Spieler alle Schiffe platziert hat, platziert die KI automatisch ihre Schiffe
-            if (platzierteSchiffeSpieler == schiffLaengen.length && !kiSchiffePlatziert) {
-                schiffePlatzierenKI();
+            if (platzierteSchiffeSpieler == schiffLaengen.length && !ki.kiSchiffePlatziert) {
+                ki.schiffePlatzierenKI();
             }
             return true;
         }
@@ -407,8 +407,8 @@ public void zeichneFehlschuss(int zeile, int spalte, String spielfeld) {
         t.color(0,0,0);
     }
 
-    // Methode zum Platzieren der Schiffe der KI (derzeit zufällig)
-    private void schiffePlatzierenKI() {
+    // Methode zum Platzieren der Schiffe der KI 
+    /*private void schiffePlatzierenKI() {
         Random random = new Random();
 
 
@@ -434,7 +434,7 @@ public void zeichneFehlschuss(int zeile, int spalte, String spielfeld) {
         }
 
         kiSchiffePlatziert = true;
-    }
+    }*/
 
 
     public void schiffePlatzierenSpielerTurtle(int row, int col, boolean horizontal) {

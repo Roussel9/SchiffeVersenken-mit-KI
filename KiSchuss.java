@@ -1,16 +1,18 @@
 //Kopie für letzte treffer methode schussAufNachbar und if anfang findenBestenzug hinzugefugt
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
-class KI {
+class KIMittel {
     public char[][] sichtbaresSpielfeldKI;
     public Spielfeld spielfeld;
+     public boolean kiSchiffePlatziert = false;
     public List<int[]> letzteTreffer = new ArrayList<>();
     public boolean schiffRichtungGefunden = false; // Gibt an, ob eine Richtung erkannt wurde
     public boolean istHorizontal = false; // Speichert die Richtung, falls gefunden
-    private boolean alleMittelGetroffen = false; // Flag, um zu verfolgen, ob alle mittleren Felder getroffen wurden
-    private List<int[]> letzteTrefferKopie = new ArrayList<>(letzteTreffer);//wenn Schiffe nebeneinander sind und eine richtung von 2 treffer aber unterschiedliche Schiffe
-    KI(Spielfeld spielfeld) {
+    public boolean alleMittelGetroffen = false; // Flag, um zu verfolgen, ob alle mittleren Felder getroffen wurden
+    public List<int[]> letzteTrefferKopie = new ArrayList<>(letzteTreffer);//wenn Schiffe nebeneinander sind und eine richtung von 2 treffer aber unterschiedliche Schiffe
+    KIMittel(Spielfeld spielfeld) {
         this.spielfeld = spielfeld;
 
         sichtbaresSpielfeldKI = new char[10][10];
@@ -22,6 +24,35 @@ class KI {
         spielfeld.zuegeDesSpielers = 0; // Anfangszustand
     }
 
+
+    // Methode zum Platzieren der Schiffe der KI 
+    private void schiffePlatzierenKI() {
+        Random random = new Random();
+
+
+        for (int i = 0; i < spielfeld.schiffLaengen.length; i++) {
+            int laenge = spielfeld.schiffLaengen[i];
+            boolean erfolgreich = false;
+
+            // Versuche so lange ein Schiff zu platzieren, bis es funktioniert
+            while (!erfolgreich) {
+                int xStart = random.nextInt(10);
+                int yStart = random.nextInt(10);
+                boolean horizontal = random.nextBoolean();
+
+                // Versuche, das Schiff zu platzieren
+                erfolgreich = spielfeld.schiffPlatzieren(spielfeldKI, xStart, yStart, laenge, horizontal);
+
+                // Wenn erfolgreich, speichere das Schiff
+                if (erfolgreich) {
+                    Schiff neuesSchiff = new Schiff(xStart, yStart, laenge, horizontal);
+                    schiffeKI.add(neuesSchiff);
+                }
+            }
+        }
+
+        kiSchiffePlatziert = true;
+    }
     // KI führt ihre drei Züge aus
     public void macheKIZuege() {
         if (spielfeld.spielBeendet) {
@@ -51,11 +82,11 @@ class KI {
         spielfeld.zuegeDesSpielers = 0; // Spieler kann danach wieder spielen
     }
 
-    private boolean istGueltigerZug(int zeile, int spalte) {
+    protected boolean istGueltigerZug(int zeile, int spalte) {
         return sichtbaresSpielfeldKI[zeile][spalte] == '~';
     }
 
-    private int[] findeBestenZug() {
+    protected int[] findeBestenZug() {
         if( !schiffRichtungGefunden){ // nebeneinander Schiffe ganz zerstören zu können
            return schussAufNachbar();
         }
@@ -69,7 +100,7 @@ class KI {
         return findeEckenZug(); // Suche nach Ecken, wenn alle mittleren Felder getroffen sind
     }
 
-    private int[] findeGezieltenZug() {
+    protected int[] findeGezieltenZug() {
        // List<int[]> jederTrefferListe = new ArrayList<>();
         if (!letzteTreffer.isEmpty() ) {
             int[] ersteTreffer = letzteTreffer.get(0);
@@ -107,7 +138,7 @@ class KI {
         return findeHeuristischenZug();
     }
 
-    private int[] schießeHorizontalWeiter() {
+    protected int[] schießeHorizontalWeiter() {
         int[] ersteTreffer = letzteTreffer.get(0);
         int[] letzteTrefferPosition = letzteTreffer.get(letzteTreffer.size() - 1);
 
@@ -134,7 +165,7 @@ class KI {
         return findeHeuristischenZug();
     }
 
-    private int[] schießeVertikalWeiter() {
+    protected int[] schießeVertikalWeiter() {
         int[] ersteTreffer = letzteTreffer.get(0);
         int[] letzteTrefferPosition = letzteTreffer.get(letzteTreffer.size() - 1);
 
@@ -162,7 +193,7 @@ class KI {
         return findeHeuristischenZug();
     }
 
-    private int[] schussAufNachbar(){//wenn Schiffe nebeneinander sind und eine richtung von 2 treffer aber unterschiedliche Schiffe
+    protected int[] schussAufNachbar(){//wenn Schiffe nebeneinander sind und eine richtung von 2 treffer aber unterschiedliche Schiffe
        // letzteTrefferKopie = letzteTreffer;
         //List<int[]> letzteTrefferKopie = new ArrayList<>(letzteTreffer);
       if(letzteTreffer.size() == 1){ // Gezielte zug für jeden treffer der verschiedene schiffe machen 
@@ -182,7 +213,7 @@ class KI {
         return findeGezieltenZug();
     }
 
-    private int[] findeHeuristischenZug() {
+    protected int[] findeHeuristischenZug() {
         // Definieren der Quadrate des Spielfeldes in 3x3 Regionen
         int[][] quadrate = {
             {0, 0, 2, 2}, {0, 3, 2, 5}, {0, 6, 2, 8},
@@ -204,7 +235,7 @@ class KI {
         return findeEckenZug(); // Falls alle Mittel getroffen sind, gehe zu den Ecken
     }
 
-    private int[] findeEckenZug() {
+    protected int[] findeEckenZug() {
         // Durchlaufe jedes Quadrat und schieße dann auf die Ecken
         int[][] quadrate = {
             {0, 0, 2, 2}, {0, 3, 2, 5}, {0, 6, 2, 9},
@@ -272,7 +303,7 @@ class KI {
         return new int[]{-1, -1}; // Keine gültigen Züge mehr
     }
 
-    private void macheSchussKI(int zeile, int spalte) {
+    protected void macheSchussKI(int zeile, int spalte) {
         if (spielfeld.spielfeldSpieler[zeile][spalte] == 'S') { // Treffer
             System.out.println("KI Treffer bei (" + zeile + ", " + spalte + ")");
             sichtbaresSpielfeldKI[zeile][spalte] = 'X';
@@ -300,3 +331,74 @@ class KI {
     }
 }
 
+
+
+class KISchwer extends KIMittel{
+    public KISchwer(Spielfeld spielfeld){
+        super(spielfeld);
+    }
+
+
+    @Override 
+    private void schiffePlatzierenKI() {
+        Random random = new Random();
+
+
+        for (int i = 0; i < spielfeld.schiffLaengen.length; i++) {
+            int laenge = spielfeld.schiffLaengen[i];
+            boolean erfolgreich = false;
+
+            // Versuche so lange ein Schiff zu platzieren, bis es funktioniert
+            while (!erfolgreich) {
+                int xStart = random.nextInt(10);
+                int yStart = random.nextInt(10);
+                boolean horizontal = random.nextBoolean();
+
+                // Versuche, das Schiff zu platzieren
+                erfolgreich = spielfeld.schiffPlatzieren(spielfeldKI, xStart, yStart, laenge, horizontal);
+
+                // Wenn erfolgreich, speichere das Schiff
+                if (erfolgreich) {
+                    Schiff neuesSchiff = new Schiff(xStart, yStart, laenge, horizontal);
+                    schiffeKI.add(neuesSchiff);
+                }
+            }
+        }
+
+        kiSchiffePlatziert = true;
+    }
+
+    public void macheKIZuege(){
+        super.macheKIZuege();
+    }
+
+    protected boolean istGueltigerZug(int zeile, int spalte){
+        return super.istGueltigerZug();
+    }
+
+    protected int[] findeBestenZug(){
+        return super.findeBestenZug();
+    }
+    protected int[] findeGezieltenZug(){
+        return super.findeGezieltenZug();
+    }
+    protected int[] schießeHorizontalWeiter(){
+        return super.schießeHorizontalWeiter();
+    }
+    protected int[] schießeVertikalWeiter(){
+        return super.schießeVertikalWeiter();
+    }
+    protected int[] schussAufNachbar(){
+        return super.schussAufNachbar();
+    }
+    protected int[] findeHeuristischenZug(){
+        return super.findeHeuristischenZug();
+    }
+    protected int[] findeEckenZug(){
+        return super.findeEckenZug();
+    }
+    protected void macheSchussKI(){
+        super.macheSchussKI();
+    }
+
+}
