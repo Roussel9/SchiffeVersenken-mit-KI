@@ -32,7 +32,7 @@ class Turtle implements Clerk {
         this.height = Math.max(1, Math.abs(height)); // height is at least of size 1
         ID = Clerk.getHashID(this);
         Clerk.load(view, "views/Turtle/turtle.js");
-        Clerk.write(view, "<canvas id='turtleCanvas" + ID + "' width='" + this.width + "' height='" + this.height + "' style='border:1px solid #000;'></canvas>");
+        Clerk.write(view, "<canvas id='turtleCanvas" + ID + "' width='" + this.width + "' height='" + this.height + "' style='border:1px solid #000; background-color:lightblue;'></canvas>");//Background
         Clerk.script(view, "const turtle" + ID + " = new Turtle(document.getElementById('turtleCanvas" + ID + "'));");
     }
 

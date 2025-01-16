@@ -1229,3 +1229,168 @@ private void frageNachNeuemSpiel() {
 
 }
 
+
+/*
+class AIDifficult extends AIMedium {
+    public AIDifficult(GameField gameField) {
+        super(gameField);
+    }
+
+    @Override
+    private void placeAIShips() {
+        Random random = new Random();
+
+        for (int i = 0; i < gameField.shipLengths.length; i++) {
+            int length = gameField.shipLengths[i];
+            boolean success = false;
+
+            // Try to place a ship until it works
+            while (!success) {
+                int xStart = random.nextInt(10);
+                int yStart = random.nextInt(10);
+                boolean horizontal = random.nextBoolean();
+
+                // Try to place the ship
+                success = gameField.placeShip(gameField.aiField, xStart, yStart, length, horizontal);
+
+                // If successful, store the ship
+                if (success) {
+                    Ship newShip = new Ship(xStart, yStart, length, horizontal);
+                    aiShips.add(newShip);
+                }
+            }
+        }
+
+        aiShipsPlaced = true;
+    }
+
+}
+*/
+
+public void drawStartScreen() {
+        turtle.left(90);
+        turtle.moveTo(250, 100);
+        turtle.textSize = 30;
+        turtle.color(0,0,255);
+        turtle.text("Willkommen zu Schiffe Versenken!");
+        turtle.textSize = 20;
+        turtle.moveTo(250, 250);
+        turtle.text("Das Spiel startet gleich...");
+        turtle.textSize = 15;
+        turtle.moveTo(250, 300);
+        turtle.text("Platzieren Sie bitte Ihre Schiffe!");
+        turtle.color(0,0,0);
+        turtle.right(90);
+    }
+
+    protected boolean checkNeighbors(int row, int column){
+        int upRow = (row < 9 ? row + 1: );
+        int downRow = row - 1;
+        int leftColumn = column - 1;
+        int rightColumn = column + 1;
+        if((visibleFieldAI[upRow][column] == '~' || visibleFieldAI[downRow][column] == '~' || visibleFieldAI[row][leftColumn] == '~' || visibleFieldAI[row][rightColumn] == '~') && row){
+            return true;
+        }return false;
+    }
+
+    
+/*
+public class Ship { // record hier spater machen 
+    private int row;          // Zeile der Schiffposition
+    private int column;       // Spalte der Schiffposition
+    private int length;       // Länge des Schiffs
+    private boolean horizontal; // Gibt an, ob das Schiff horizontal oder vertikal ist
+
+    // Konstruktor der Schiff-Klasse
+    public Ship(int row, int column, int length, boolean horizontal) {
+        this.row = row;
+        this.column = column;
+        this.length = length;
+        this.horizontal = horizontal;
+    }
+
+    // Getter-Methoden
+    public int getRow() {
+        return row;
+    }
+
+    public int getColumn() {
+        return column;
+    }
+
+    public int getLength() {
+        return length;
+    }
+
+    public boolean isHorizontal() {
+        return horizontal;
+    }
+
+    // Setter-Methoden (falls du die Werte später ändern möchtest)
+    public void setRow(int row) {
+        this.row = row;
+    }
+
+    public void setColumn(int column) {
+        this.column = column;
+    }
+
+    public void setLength(int length) {
+        this.length = length;
+    }
+
+    public void setHorizontal(boolean horizontal) {
+        this.horizontal = horizontal;
+    }
+}
+*/
+
+/*public class Schiff {
+    private int zeile;          // Zeile der Schiffposition
+    private int spalte;         // Spalte der Schiffposition
+    private int laenge;         // Länge des Schiffs
+    private boolean horizontal; // Gibt an, ob das Schiff horizontal oder vertikal ist
+
+    // Konstruktor der Schiff-Klasse
+    public Schiff(int zeile, int spalte, int laenge, boolean horizontal) {
+        this.zeile = zeile;
+        this.spalte = spalte;
+        this.laenge = laenge;
+        this.horizontal = horizontal;
+    }
+
+    // Getter-Methoden
+    public int getZeile() {
+        return zeile;
+    }
+
+    public int getSpalte() {
+        return spalte;
+    }
+
+    public int getLaenge() {
+        return laenge;
+    }
+
+    public boolean isHorizontal() {
+        return horizontal;
+    }
+
+    // Setter-Methoden (falls du die Werte später ändern möchtest)
+    public void setZeile(int zeile) {
+        this.zeile = zeile;
+    }
+
+    public void setSpalte(int spalte) {
+        this.spalte = spalte;
+    }
+
+    public void setLaenge(int laenge) {
+        this.laenge = laenge;
+    }
+
+    public void setHorizontal(boolean horizontal) {
+        this.horizontal = horizontal;
+    }
+}
+*/

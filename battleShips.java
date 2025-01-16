@@ -29,15 +29,15 @@ public class GameField {
                 playerField[i][j] = '~';   // "~" for water
             }
         }
-        ai = new AIMedium(this);  // New AI object is created here
+       // ai = new AIMedium(this);  // New AI object is created here
         drawStartScreen();
 
         // Delay for 10 seconds
-        try {
-            Thread.sleep(5000); // 10 seconds wait
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+       // try {
+       //     Thread.sleep(5000); // 10 seconds wait
+       // } catch (InterruptedException e) {
+       //     Thread.currentThread().interrupt();
+        //}
 
         // Clear start screen and display game fields
         turtle.reset(); // Removes the start screen
@@ -52,7 +52,7 @@ public class GameField {
         turtle.textSize = 20;
 
         // Display header
-        turtle.left(90).moveTo(220, y).color(0,255,0);
+        turtle.left(90).moveTo(220, y).color(50,205,50);
         turtle.text(playerType.equals("Player") ? "Player" : "Computer");
         turtle.right(90);
         turtle.color(0,0,255);
@@ -74,28 +74,64 @@ public class GameField {
     }
 
     public void drawStartScreen() {
-        turtle.left(90);
-        turtle.moveTo(250, 100);
-        turtle.textSize = 30;
-        turtle.color(0,0,255);
-        turtle.text("Willkommen zu Schiffe Versenken!");
-        turtle.textSize = 20;
-        turtle.moveTo(250, 250);
-        turtle.text("Das Spiel startet gleich...");
-        turtle.textSize = 15;
-        turtle.moveTo(250, 300);
-        turtle.text("Platzieren Sie bitte Ihre Schiffe!");
-        turtle.color(0,0,0);
-        turtle.right(90);
+    // Anzeige der Startnachricht
+    turtle.left(90);
+    turtle.moveTo(250, 100);
+    turtle.textSize = 30;
+    turtle.color(0, 0, 255);
+    turtle.text("Willkommen zu Schiffe Versenken!");
+    turtle.textSize = 20;
+    turtle.moveTo(250, 250);
+    turtle.text("Bitte wählen Sie einen Schwierigkeitsgrad:");
+    //System.out.println("Bitte wählen Sie einen Schwierigkeitsgrad:");
+    turtle.textSize = 15;
+    turtle.moveTo(250, 300);
+    turtle.text("1 - Einfach");
+    turtle.moveTo(250, 320);
+    turtle.text("2 - Mittel");
+    turtle.moveTo(250, 340);
+    turtle.text("3 - Schwer");
+    turtle.color(0, 0, 0);
+    turtle.right(90);
+
+    // Warten auf Benutzereingabe
+    Scanner scanner = new Scanner(System.in);
+    int difficulty = 0;
+    while (difficulty < 1 || difficulty > 3) {
+        System.out.print("Bitte waehlen Sie einen Schwierigkeitsgrad (1-3): ");
+        if (scanner.hasNextInt()) {
+            difficulty = scanner.nextInt();
+        } else {
+            scanner.next(); // Ungültige Eingabe verwerfen
+        }
     }
+
+    // KI-Instanz entsprechend der Auswahl erstellen
+    switch (difficulty) {
+        case 1:
+            ai = new AIEasy(this);  // Beispiel für einfache KI
+            System.out.println("Schwierigkeitsgrad 'Einfach' gewaehlt.");
+            break;
+        case 2:
+            ai = new AIMedium(this);
+            System.out.println("Schwierigkeitsgrad 'Mittel' gewaehlt.");
+            break;
+        case 3:
+            ai = new AIDifficult(this);
+            System.out.println("Schwierigkeitsgrad 'Schwer' gewaehlt.");
+            break;
+    }
+}
+
 
     // Method to place a ship on the player's field
     public boolean placePlayerShip(int row, int column, boolean horizontal) {
-        if (placedPlayerShips >= shipLengths.length) {
-            System.out.println("All ships have already been placed.");
-            return false;
-        }
-
+        assert row >= 0 && row <= 9 && column >= 0 && column <= 9 :"Schiffe muessen innerhalb des Spielfelds liegen!";
+        if (placedPlayerShips >= shipLengths.length) throw new IllegalArgumentException("Alle Schiffe wurden bereits platziert.");
+        //if (placedPlayerShips >= shipLengths.length) {
+         //   System.out.println("Alle Schiffe wurden bereits platziert.");
+           // return false;
+        //}
         int length = shipLengths[placedPlayerShips];
         if (placeShip(playerField, row, column, length, horizontal)) { 
             Ship newShip = new Ship(row, column, length, horizontal);
@@ -146,26 +182,29 @@ public class GameField {
 
 // Method for the player to make a shot
 public void shootPlayer(int row, int column) {
-    if (gameOver) {
-        System.out.println("Das Spiel ist bereits beendet. Keine Züge mehr möglich.");
-        return;
-    }
-
+    assert row >=0 && row <=9 && column >= 0 && column <= 9 : "Position muss im Spielfeld sein.";
+     if (gameOver) throw new IllegalArgumentException("Das Spiel ist bereits beendet. Keine Zuege mehr möglich.");
+    //if (gameOver) {
+       // System.out.println("Das Spiel ist bereits beendet. Keine Züge mehr möglich.");
+       // return;
+   // }
     if (aiShips.isEmpty()) {
-        System.out.println("Es gibt kein Schiff auf dem Spielfeld");
-        return;
+        throw new IllegalArgumentException("Es gibt kein Schiff auf dem Spielfeld");
+       // System.out.println("Es gibt kein Schiff auf dem Spielfeld");
+        //return;
     }
 
     if (playerMoves >= 3) {
-        System.out.println("Du hast bereits 3 Züge gemacht. Nun ist die KI dran.");
+        System.out.println("Du hast bereits 3 Zuege gemacht. Nun ist die KI dran.");
         ai.makeAIMoves(); // KI macht ihre drei Züge
         return;
     }
 
     // Überprüfung, ob die Position bereits geschossen wurde
     if (aiField[row][column] == 'X' || aiField[row][column] == '0') {
-        System.out.println("Du hast bereits auf diese Position geschossen! Wähle eine andere.");
-        return;
+        throw new IllegalArgumentException("Du hast bereits auf diese Position geschossen! Wähle eine andere.");
+        //System.out.println("Du hast bereits auf diese Position geschossen! Wähle eine andere.");
+        //return;
     }
 
     // Überprüfen, ob der Schuss ein Treffer oder Fehlschuss ist
@@ -199,16 +238,16 @@ private void checkAndMarkDestroyedShipsAI() {
         Ship ship = aiShips.get(i);
         boolean destroyed = true;
 
-        if (ship.isHorizontal()) {
-            for (int j = 0; j < ship.getLength(); j++) {
-                if (aiField[ship.getRow()][ship.getColumn() + j] != 'X') {
+        if (ship.horizontal()) {
+            for (int j = 0; j < ship.length(); j++) {
+                if (aiField[ship.row()][ship.column() + j] != 'X') {
                     destroyed = false;
                     break;
                 }
             }
         } else {
-            for (int j = 0; j < ship.getLength(); j++) {
-                if (aiField[ship.getRow() + j][ship.getColumn()] != 'X') {
+            for (int j = 0; j < ship.length(); j++) {
+                if (aiField[ship.row() + j][ship.column()] != 'X') {
                     destroyed = false;
                     break;
                 }
@@ -233,16 +272,16 @@ public void checkAndMarkDestroyedShipsPlayer() {
         Ship ship = playerShips.get(j);
         boolean destroyed = true;
 
-        if (ship.isHorizontal()) {
-            for (int i = 0; i < ship.getLength(); i++) {
-                if (playerField[ship.getRow()][ship.getColumn() + i] != 'X') {
+        if (ship.horizontal()) {
+            for (int i = 0; i < ship.length(); i++) {
+                if (playerField[ship.row()][ship.column() + i] != 'X') {
                     destroyed = false;
                     break;
                 }
             }
         } else {
-            for (int i = 0; i < ship.getLength(); i++) {
-                if (playerField[ship.getRow() + i][ship.getColumn()] != 'X') {
+            for (int i = 0; i < ship.length(); i++) {
+                if (playerField[ship.row() + i][ship.column()] != 'X') {
                     destroyed = false;
                     break;
                 }
@@ -251,20 +290,20 @@ public void checkAndMarkDestroyedShipsPlayer() {
 
         if (destroyed) {
             
-            if (ship.getLength() < ai.lastHits.size()) {
+            if (ship.length() < ai.lastHits.size()) {
                // System.out.println(ai.lastHits.size());
                 System.out.println("Ein Schiff des Spielers komplett zerstört");
                 drawRedLine(ship, "Player");
-                int startRow = ship.getRow();
-                int startCol = ship.getColumn();
-                if (ship.isHorizontal()) {
-                    int endCol = startCol + ship.getLength() - 1;// da indize beginnt mit 0
+                int startRow = ship.row();
+                int startCol = ship.column();
+                if (ship.horizontal()) {
+                    int endCol = startCol + ship.length() - 1;// da indize beginnt mit 0
                     for (int i = startCol; i <= endCol; i++) {
                         removeHitFromList(ai.lastHits, startRow, i);
                     }
                    // System.out.println(ai.lastHits.size());
                 } else {
-                    int endRow = startRow + ship.getLength() - 1;
+                    int endRow = startRow + ship.length() - 1;
                     for (int i = startRow; i <= endRow; i++) {
                         removeHitFromList(ai.lastHits, i, startCol);
                     }
@@ -358,16 +397,16 @@ private void drawRedLine(Ship ship, String field) {
     double startX, startY, endX, endY;
     double squareLength = 15;
 
-    if (ship.isHorizontal()) {
-        startX = x + (ship.getColumn() * squareLength);
-        startY = y + (ship.getRow() * squareLength) + 7.5;
-        endX = startX + (ship.getLength() * squareLength);
+    if (ship.horizontal()) {
+        startX = x + (ship.column() * squareLength);
+        startY = y + (ship.row() * squareLength) + 7.5;
+        endX = startX + (ship.length() * squareLength);
         endY = startY;
     } else {
-        startX = x + (ship.getColumn() * squareLength) + 7.5;
-        startY = y + (ship.getRow() * squareLength);
+        startX = x + (ship.column() * squareLength) + 7.5;
+        startY = y + (ship.row() * squareLength);
         endX = startX;
-        endY = startY + (ship.getLength() * squareLength);
+        endY = startY + (ship.length() * squareLength);
     }
 
     turtle.penUp();
@@ -384,7 +423,7 @@ public void placePlayerShipTurtle(int row, int col, boolean horizontal) {
     if (placedPlayerShips == shipLengths.length && !ai.aiShipsPlaced) {
         startX = 150;  // Base X-coordinate of the field
         startY = 330;
-        turtle.color(0, 0, 255);
+        turtle.color(173, 216, 230);
     } else {
         startX = 150;  // Base X-coordinate of the field
         startY = 105;  //
@@ -460,7 +499,7 @@ public String checkWinner() {
         turtle.left(90);
         turtle.textSize = 30;
         turtle.moveTo(250, 520);
-        turtle.color(0, 255, 0);
+        turtle.color(50,205,50);
         turtle.text("Sie haben gewonnen!");
         turtle.right(90);
         System.out.println("Sie haben gewonnen!");
@@ -476,7 +515,7 @@ private void promptNewGame() {
     turtle.moveTo(250, 540);
     turtle.textSize = 12;
     turtle.left(90);
-    turtle.color(0, 255, 0);
+    turtle.color(50,205,50);
     turtle.text("Geben Sie 1 ein, um ein neues Spiel zu starten, oder 2, um das Spiel zu beenden.");
     turtle.right(90);
     System.out.println("Geben Sie 1 ein, um ein neues Spiel zu starten, oder 2, um das Spiel zu beenden.");
@@ -515,11 +554,11 @@ private void startNewGame() {
     drawStartScreen();  // Display the start screen
 
     // Delay of 20 seconds
-    try {
-        Thread.sleep(20000); // Wait for 20 seconds
-    } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-    }
+   // try {
+     //   Thread.sleep(20000); // Wait for 20 seconds
+    //} catch (InterruptedException e) {
+      //  Thread.currentThread().interrupt();
+    //}
 
     // Clear start screen and display game fields
     turtle.reset(); // Remove the start screen
@@ -536,6 +575,8 @@ private void startNewGame() {
 }
 
 }
+
+record Ship(int row, int column, int length, boolean horizontal){}
 
 
  

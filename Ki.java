@@ -47,15 +47,16 @@ class AIMedium {
                 }
             }
         }
-
+        System.out.println("Computer hat seine vier Schiffe auch platziert . Sie koennen jetzt spielen!");
         aiShipsPlaced = true;
     }
 
     // AI makes its three moves
     public void makeAIMoves() {
         if (gameField.gameOver) {
-            System.out.println("Das Spiel ist bereits beendet. Keine Zuege mehr möglich.");
-            return;
+            throw new IllegalArgumentException("Das Spiel ist bereits beendet. Keine Zuege mehr möglich.");
+            //System.out.println("Das Spiel ist bereits beendet. Keine Zuege mehr möglich.");
+            //return;
         }
 
         for (int i = 0; i < 3; i++) { // AI makes three moves
@@ -310,76 +311,173 @@ class AIMedium {
     }
 }
 
-/*
+
+
+
 
 class AIDifficult extends AIMedium {
-    public AIDifficult(GameField gameField) {
+
+    AIDifficult(GameField gameField) {
         super(gameField);
     }
 
     @Override
-    private void placeAIShips() {
+    protected void placeAIShips() {
         Random random = new Random();
 
         for (int i = 0; i < gameField.shipLengths.length; i++) {
             int length = gameField.shipLengths[i];
             boolean success = false;
 
-            // Try to place a ship until it works
             while (!success) {
                 int xStart = random.nextInt(10);
                 int yStart = random.nextInt(10);
                 boolean horizontal = random.nextBoolean();
 
-                // Try to place the ship
-                success = gameField.placeShip(gameFieldAI, xStart, yStart, length, horizontal);
+                // Prüfen, ob das Schiff platziert werden kann und keine Nachbarschaftsverletzung vorliegt
+                if (canPlaceWithoutNeighbors(xStart, yStart, length, horizontal)) {
+                    success = gameField.placeShip(gameField.aiField, xStart, yStart, length, horizontal);
 
-                // If successful, store the ship
-                if (success) {
-                    Ship newShip = new Ship(xStart, yStart, length, horizontal);
-                    aiShips.add(newShip);
+                    if (success) {
+                        Ship newShip = new Ship(xStart, yStart, length, horizontal);
+                        gameField.aiShips.add(newShip);
+                    }
+                }
+            }
+        }
+        System.out.println("Computer hat seine vier Schiffe auch platziert . Sie koennen jetzt spielen!");
+        aiShipsPlaced = true;
+    }
+
+
+    @Override
+    protected int[] findCornerMove() {
+        // Loop through each square and shoot at the corners
+        int[][] squares = {
+            {0, 0, 2, 2}, {0, 3, 2, 5}, {0, 6, 2, 9},
+            {3, 0, 5, 2}, {3, 3, 5, 5}, {3, 6, 5, 9},
+            {6, 0, 8, 2}, {6, 3, 8, 5}, {6, 6, 8, 9},
+            {9, 0, 9, 2}, {9, 3, 9, 5}, {9, 6, 9, 9}
+        };
+
+        for (int[] square : squares) {
+            int rowStart = square[0];
+            int colStart = square[1];
+            int rowEnd = square[2];
+            int colEnd = square[3];
+
+            if (isValidMove(rowStart, colEnd) && checkNeighbors(rowStart, colEnd)) {
+                return new int[]{rowStart, colEnd};
+            }
+        }
+
+        for (int[] square : squares) {
+            int rowStart = square[0];
+            int colStart = square[1];
+            int rowEnd = square[2];
+            int colEnd = square[3];
+
+            if (isValidMove(rowStart, colStart) && checkNeighbors(rowStart, colStart)) {
+                return new int[]{rowStart, colStart};
+            }
+        }
+
+        for (int[] square : squares) {
+            int rowStart = square[0];
+            int colStart = square[1];
+            int rowEnd = square[2];
+            int colEnd = square[3];
+
+            if (isValidMove(rowEnd, colEnd) && checkNeighbors(rowEnd, colEnd)) {
+                return new int[]{rowEnd, colEnd};
+            }
+        }
+
+        for (int[] square : squares) {
+            int rowStart = square[0];
+            int colStart = square[1];
+            int rowEnd = square[2];
+            int colEnd = square[3];
+
+            if (isValidMove(rowEnd, colStart) && checkNeighbors(rowEnd, colStart)) {
+                return new int[]{rowEnd, colStart};
+            }
+        }
+
+        // Last fallback: Check all fields of the game field
+        for (int row = 9; row >= 0; row--) {
+            for (int col = 9; col >= 0; col--) {
+                if (isValidMove(row, col) && checkNeighbors(row, col)) {
+                    return new int[]{row, col};
                 }
             }
         }
 
-        aiShipsPlaced = true;
+        return new int[]{-1, -1}; // No valid moves left
     }
 
-    public void makeAIMoves() {
-        super.makeAIMoves();
+
+    protected boolean checkNeighbors(int row, int column) {
+        // Grenzprüfungen
+        boolean upValid = row > 0 && visibleFieldAI[row - 1][column] == '~';
+        boolean downValid = row < 9 && visibleFieldAI[row + 1][column] == '~';
+        boolean leftValid = column > 0 && visibleFieldAI[row][column - 1] == '~';
+        boolean rightValid = column < 9 && visibleFieldAI[row][column + 1] == '~';
+
+    return upValid || downValid || leftValid || rightValid;
     }
 
-    protected boolean isValidMove(int row, int col) {
-        return super.isValidMove();
-    }
 
-    protected int[] findBestMove() {
-        return super.findBestMove();
-    }
+    private boolean canPlaceWithoutNeighbors(int xStart, int yStart, int length, boolean horizontal) {
+        // Prüfen, ob das Schiff innerhalb der Spielfeldgrenzen bleibt
+        if (horizontal) {
+            if (yStart + length > 10) return false;
+        } else {
+            if (xStart + length > 10) return false;
+        }
 
-    protected int[] findTargetedMove() {
-        return super.findTargetedMove();
-    }
+        // Prüfen, ob die Felder um das Schiff herum frei sind
+        int xMin = Math.max(0, xStart - 1);
+        int xMax = Math.min(9, horizontal ? xStart + 1 : xStart + length);
+        int yMin = Math.max(0, yStart - 1);
+        int yMax = Math.min(9, horizontal ? yStart + length : yStart + 1);
 
-    protected int[] shootHorizontalFurther() {
-        return super.shootHorizontalFurther();
-    }
+        for (int x = xMin; x <= xMax; x++) {
+            for (int y = yMin; y <= yMax; y++) {
+                if (gameField.aiField[x][y] != '~') {
+                    return false;
+                }
+            }
+        }
 
-    protected int[] shootVerticalFurther() {
-        return super.shootVerticalFurther();
-    }
-
-    protected int[] shootAtNeighbor() {
-        return super.shootAtNeighbor();
-    }
-
-    protected int[] findHeuristicMove() {
-        return super.findHeuristicMove();
-    }
-
-    protected int[] findCornerMove() {
-        return super.findCornerMove();
+        return true;
     }
 }
 
-*/
+
+
+
+class AIEasy extends AIMedium {
+
+    AIEasy(GameField gameField){
+        super(gameField);
+    }
+
+    @Override
+    protected int[] findHeuristicMove() {
+        Random random = new Random();
+        int row, column;
+
+        do {
+            row = random.nextInt(10);
+            column = random.nextInt(10);
+        } while (!isValidMove(row, column)); // Wiederholen, bis ein gültiger Zug gefunden wird
+
+        return new int[]{row, column};
+    }
+
+    @Override
+    protected int[] findCornerMove() {
+        return findHeuristicMove();
+    }
+}
