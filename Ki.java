@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -7,23 +8,22 @@ class AIMedium {
     public GameField gameField;
     public boolean aiShipsPlaced = false;
     public List<int[]> lastHits = new ArrayList<>();
-    public boolean shipDirectionFound = false; // Indicates if a direction has been detected
-    public boolean isHorizontal = false; // Stores the direction if found
-    public boolean allMiddleFieldsHit = false; // Flag to track if all middle fields are hit
-    public List<int[]> lastHitsCopy = new ArrayList<>(lastHits); // In case ships are next to each other and a direction from 2 hits but different ships
+    public boolean shipDirectionFound = false; 
+    public boolean isHorizontal = false; 
+    public boolean allMiddleFieldsHit = false; 
+    public List<int[]> lastHitsCopy = new ArrayList<>(lastHits); 
     AIMedium(GameField gameField) {
         this.gameField = gameField;
 
         visibleFieldAI = new char[10][10];
         for (int row = 0; row < 10; row++) {
             for (int col = 0; col < 10; col++) {
-                visibleFieldAI[row][col] = '~'; // Everything is unknown
+                visibleFieldAI[row][col] = '~'; 
             }
         }
-        gameField.playerMoves = 0; // Initial state
+        gameField.playerMoves = 0; 
     }
 
-    // Method for placing AI ships
     protected void placeAIShips() {
         Random random = new Random();
 
@@ -31,16 +31,13 @@ class AIMedium {
             int length = gameField.shipLengths[i];
             boolean success = false;
 
-            // Try to place a ship until it works
             while (!success) {
                 int xStart = random.nextInt(10);
                 int yStart = random.nextInt(10);
                 boolean horizontal = random.nextBoolean();
 
-                // Try to place the ship
                 success = gameField.placeShip(gameField.aiField, xStart, yStart, length, horizontal);
 
-                // If successful, store the ship
                 if (success) {
                     Ship newShip = new Ship(xStart, yStart, length, horizontal);
                     gameField.aiShips.add(newShip);
@@ -51,7 +48,6 @@ class AIMedium {
         aiShipsPlaced = true;
     }
 
-    // AI makes its three moves
     public void makeAIMoves() {
         if (gameField.gameOver) {
             throw new IllegalArgumentException("Das Spiel ist bereits beendet. Keine Zuege mehr möglich.");
@@ -59,7 +55,7 @@ class AIMedium {
             //return;
         }
 
-        for (int i = 0; i < 3; i++) { // AI makes three moves
+        for (int i = 0; i < 3; i++) { 
             if (gameField.playerShips.isEmpty()) {
                 break;
             }
@@ -71,14 +67,14 @@ class AIMedium {
                 makeAIShot(row, col);
             }
 
-            // Wait time between AI moves
             try {
-                Thread.sleep(1000); // 1 second pause
+                Thread.sleep(1000); 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
-        gameField.playerMoves = 0; // Player can play again
+        System.out.println("Der Computer hat schon seine 3 Zuege gemacht . Jetzt sind Sie dran!");
+        gameField.playerMoves = 0; 
     }
 
     protected boolean isValidMove(int row, int col) {
@@ -86,7 +82,7 @@ class AIMedium {
     }
 
     protected int[] findBestMove() {
-        if (!shipDirectionFound) { // To destroy ships next to each other
+        if (!shipDirectionFound) { 
             return shootAtNeighbor();
         }
 
@@ -94,16 +90,15 @@ class AIMedium {
             return findTargetedMove();
         }
         if (!allMiddleFieldsHit) {
-            return findHeuristicMove(); // Search for middle fields
+            return findHeuristicMove(); 
         }
-        return findCornerMove(); // Search for corners if all middle fields are hit
+        return findCornerMove(); 
     }
 
     protected int[] findTargetedMove() {
         if (!lastHits.isEmpty()) {
             int[] firstHit = lastHits.get(0);
 
-            // If a direction has already been detected, continue shooting in that direction
             if (shipDirectionFound) {
                 if (isHorizontal) {
                     return shootHorizontalFurther();
@@ -112,7 +107,6 @@ class AIMedium {
                 }
             }
 
-            // If no direction has been detected, try shooting at adjacent fields
             for (int[] direction : new int[][]{{0, 1}, {0, -1}, {1, 0}, {-1, 0}}) {
                 int newRow = firstHit[0] + direction[0];
                 int newCol = firstHit[1] + direction[1];
@@ -131,20 +125,18 @@ class AIMedium {
         int[] firstHit = lastHits.get(0);
         int[] lastHitPosition = lastHits.get(lastHits.size() - 1);
 
-        // Try shooting further right
         int rightCol = lastHitPosition[1] + 1;
         if (rightCol < 10 && isValidMove(firstHit[0], rightCol)) {
             return new int[]{firstHit[0], rightCol};
         }
 
-        // Try shooting further left
-        int minCol = lastHits.stream().mapToInt(hit -> hit[1]).min().orElse(-1); // Extract column values, find minimum, default to -1
+        int minCol = lastHits.stream().mapToInt(hit -> hit[1]).min().orElse(-1); 
         int leftCol = minCol - 1;
         if (leftCol >= 0 && isValidMove(firstHit[0], leftCol)) {
             return new int[]{firstHit[0], leftCol};
         }
 
-        if (shipDirectionFound) { // If ships are next to each other and a direction from 2 hits but different ships
+        if (shipDirectionFound) { 
             lastHitsCopy = lastHits;
             return shootAtNeighbor();
         }
@@ -157,20 +149,18 @@ class AIMedium {
         int[] firstHit = lastHits.get(0);
         int[] lastHitPosition = lastHits.get(lastHits.size() - 1);
 
-        // Try shooting further down
         int downRow = lastHitPosition[0] + 1;
         if (downRow < 10 && isValidMove(downRow, firstHit[1])) {
             return new int[]{downRow, firstHit[1]};
         }
 
-        // Try shooting further up
         int minRow = lastHits.stream().mapToInt(hit -> hit[0]).min().orElse(-1); // Extract row values, find minimum, default to -1
         int upRow = minRow - 1;
         if (upRow >= 0 && isValidMove(upRow, firstHit[1])) {
             return new int[]{upRow, firstHit[1]};
         }
 
-        if (shipDirectionFound) { // If ships are next to each other and a direction from 2 hits but different ships
+        if (shipDirectionFound) { 
             lastHitsCopy = lastHits;
             return shootAtNeighbor();
         }
@@ -179,8 +169,8 @@ class AIMedium {
         return findHeuristicMove();
     }
 
-    protected int[] shootAtNeighbor() { // If ships are next to each other and a direction from 2 hits but different ships
-        if (lastHits.size() == 1) { // Targeted move for each hit on different ships
+    protected int[] shootAtNeighbor() { 
+        if (lastHits.size() == 1) { 
             return findTargetedMove();
         }
 
@@ -198,7 +188,6 @@ class AIMedium {
     }
 
     protected int[] findHeuristicMove() {
-        // Define the squares of the field in 3x3 regions
         int[][] squares = {
             {0, 0, 2, 2}, {0, 3, 2, 5}, {0, 6, 2, 8},
             {3, 0, 5, 2}, {3, 3, 5, 5}, {3, 6, 5, 8},
@@ -206,7 +195,6 @@ class AIMedium {
             {9, 0, 9, 2}, {9, 3, 9, 5}, {9, 6, 9, 8}
         };
 
-        // Loop through each square and shoot at the center of the square first
         for (int[] square : squares) {
             int middleRow = (square[0] + square[2]) / 2;
             int middleCol = (square[1] + square[3]) / 2;
@@ -215,12 +203,11 @@ class AIMedium {
             }
         }
 
-        allMiddleFieldsHit = true; // All middle fields have been hit
-        return findCornerMove(); // If all middle fields are hit, go to the corners
+        allMiddleFieldsHit = true; 
+        return findCornerMove(); 
     }
 
     protected int[] findCornerMove() {
-        // Loop through each square and shoot at the corners
         int[][] squares = {
             {0, 0, 2, 2}, {0, 3, 2, 5}, {0, 6, 2, 9},
             {3, 0, 5, 2}, {3, 3, 5, 5}, {3, 6, 5, 9},
@@ -228,51 +215,35 @@ class AIMedium {
             {9, 0, 9, 2}, {9, 3, 9, 5}, {9, 6, 9, 9}
         };
 
-        for (int[] square : squares) {
-            int rowStart = square[0];
-            int colStart = square[1];
-            int rowEnd = square[2];
-            int colEnd = square[3];
+        // Prüfen in vordefinierter Reihenfolge
+        int[] result = processSquares(squares, true, true);
+        if (!isInvalidMove(result)) return result;
 
-            if (isValidMove(rowStart, colEnd)) {
-                return new int[]{rowStart, colEnd};
+        result = processSquares(squares, true, false);
+        if (!isInvalidMove(result)) return result;
+
+        result = processSquares(squares, false, true);
+        if (!isInvalidMove(result)) return result;
+
+        result = processSquares(squares, false, false);
+        if (!isInvalidMove(result)) return result;
+
+        // Fallback
+        return findFallbackMove();
+    }
+
+    protected int[] processSquares(int[][] squares, boolean useRowStart, boolean useColStart) {
+        for (int[] square : squares) {
+            int row = useRowStart ? square[0] : square[2];
+            int col = useColStart ? square[1] : square[3];
+            if (isValidMove(row, col)) {
+                return new int[]{row, col};
             }
         }
+        return new int[]{-1, -1};
+    }
 
-        for (int[] square : squares) {
-            int rowStart = square[0];
-            int colStart = square[1];
-            int rowEnd = square[2];
-            int colEnd = square[3];
-
-            if (isValidMove(rowStart, colStart)) {
-                return new int[]{rowStart, colStart};
-            }
-        }
-
-        for (int[] square : squares) {
-            int rowStart = square[0];
-            int colStart = square[1];
-            int rowEnd = square[2];
-            int colEnd = square[3];
-
-            if (isValidMove(rowEnd, colEnd)) {
-                return new int[]{rowEnd, colEnd};
-            }
-        }
-
-        for (int[] square : squares) {
-            int rowStart = square[0];
-            int colStart = square[1];
-            int rowEnd = square[2];
-            int colEnd = square[3];
-
-            if (isValidMove(rowEnd, colStart)) {
-                return new int[]{rowEnd, colStart};
-            }
-        }
-
-        // Last fallback: Check all fields of the game field
+    protected int[] findFallbackMove() {
         for (int row = 9; row >= 0; row--) {
             for (int col = 9; col >= 0; col--) {
                 if (isValidMove(row, col)) {
@@ -280,9 +251,13 @@ class AIMedium {
                 }
             }
         }
-
-        return new int[]{-1, -1}; // No valid moves left
+        return new int[]{-1, -1};
     }
+
+    protected boolean isInvalidMove(int[] move) {
+        return move[0] == -1 && move[1] == -1;
+    }
+
 
     protected void makeAIShot(int row, int col) {
         if (gameField.playerField[row][col] == 'S') { // Hit
@@ -310,8 +285,6 @@ class AIMedium {
         }
     }
 }
-
-
 
 
 
@@ -349,62 +322,74 @@ class AIDifficult extends AIMedium {
         aiShipsPlaced = true;
     }
 
+    @Override
+    protected int[] findHeuristicMove() {
+        int[][] squares = {
+            {0, 0, 2, 2}, {0, 3, 2, 5}, {0, 6, 2, 8},
+            {3, 0, 5, 2}, {3, 3, 5, 5}, {3, 6, 5, 8},
+            {6, 0, 8, 2}, {6, 3, 8, 5}, {6, 6, 8, 8},
+            {9, 0, 9, 2}, {9, 3, 9, 5}, {9, 6, 9, 8}
+        };
+
+        List<int[]> squareList = new ArrayList<>();
+        Collections.addAll(squareList, squares);// Konvertiere das Array in eine Liste, um die Reihenfolge zu mischen
+        Collections.shuffle(squareList);// Zufällige Reihenfolge für die  Schleife
+        for (int[] square : squareList) {
+            int middleRow = (square[0] + square[2]) / 2;
+            int middleCol = (square[1] + square[3]) / 2;
+            if (isValidMove(middleRow, middleCol)) {
+                return new int[]{middleRow, middleCol};
+            }
+        }
+
+        allMiddleFieldsHit = true; 
+        return findCornerMove(); 
+    }
+
 
     @Override
     protected int[] findCornerMove() {
-        // Loop through each square and shoot at the corners
-        int[][] squares = {
-            {0, 0, 2, 2}, {0, 3, 2, 5}, {0, 6, 2, 9},
-            {3, 0, 5, 2}, {3, 3, 5, 5}, {3, 6, 5, 9},
-            {6, 0, 8, 2}, {6, 3, 8, 5}, {6, 6, 8, 9},
-            {9, 0, 9, 2}, {9, 3, 9, 5}, {9, 6, 9, 9}
-        };
+        List<int[]> squares = defineSquares();
 
-        for (int[] square : squares) {
-            int rowStart = square[0];
-            int colStart = square[1];
-            int rowEnd = square[2];
-            int colEnd = square[3];
+        int[] result = processSquares(squares, true, true);
+        if (!isInvalidMove(result)) return result;
 
-            if (isValidMove(rowStart, colEnd) && checkNeighbors(rowStart, colEnd)) {
-                return new int[]{rowStart, colEnd};
-            }
+        result = processSquares(squares, true, false);
+        if (!isInvalidMove(result)) return result;
+
+        result = processSquares(squares, false, true);
+        if (!isInvalidMove(result)) return result;
+
+        result = processSquares(squares, false, false);
+        if (!isInvalidMove(result)) return result;
+
+        return findFallbackMove();
+    }
+
+    protected List<int[]> defineSquares() {
+        // Definiere die Quadrate
+       // Erstelle eine veränderliche Liste
+        return new ArrayList<>(List.of(
+            new int[]{0, 0, 2, 2}, new int[]{0, 3, 2, 5}, new int[]{0, 6, 2, 9},
+            new int[]{3, 0, 5, 2}, new int[]{3, 3, 5, 5}, new int[]{3, 6, 5, 9},
+            new int[]{6, 0, 8, 2}, new int[]{6, 3, 8, 5}, new int[]{6, 6, 8, 9},
+            new int[]{9, 0, 9, 2}, new int[]{9, 3, 9, 5}, new int[]{9, 6, 9, 9}
+        ));
         }
 
+    protected int[] processSquares(List<int[]> squares, boolean useRowStart, boolean useColStart) {
+        Collections.shuffle(squares);
         for (int[] square : squares) {
-            int rowStart = square[0];
-            int colStart = square[1];
-            int rowEnd = square[2];
-            int colEnd = square[3];
-
-            if (isValidMove(rowStart, colStart) && checkNeighbors(rowStart, colStart)) {
-                return new int[]{rowStart, colStart};
+            int row = useRowStart ? square[0] : square[2];
+            int col = useColStart ? square[1] : square[3];
+            if (isValidMove(row, col) && checkNeighbors(row, col)) {
+                return new int[]{row, col};
             }
         }
-
-        for (int[] square : squares) {
-            int rowStart = square[0];
-            int colStart = square[1];
-            int rowEnd = square[2];
-            int colEnd = square[3];
-
-            if (isValidMove(rowEnd, colEnd) && checkNeighbors(rowEnd, colEnd)) {
-                return new int[]{rowEnd, colEnd};
-            }
-        }
-
-        for (int[] square : squares) {
-            int rowStart = square[0];
-            int colStart = square[1];
-            int rowEnd = square[2];
-            int colEnd = square[3];
-
-            if (isValidMove(rowEnd, colStart) && checkNeighbors(rowEnd, colStart)) {
-                return new int[]{rowEnd, colStart};
-            }
-        }
-
-        // Last fallback: Check all fields of the game field
+        return new int[]{-1,-1};
+    }
+    @Override
+    protected int[] findFallbackMove() {
         for (int row = 9; row >= 0; row--) {
             for (int col = 9; col >= 0; col--) {
                 if (isValidMove(row, col) && checkNeighbors(row, col)) {
@@ -412,9 +397,9 @@ class AIDifficult extends AIMedium {
                 }
             }
         }
-
-        return new int[]{-1, -1}; // No valid moves left
+        return new int[]{-1, -1};
     }
+
 
 
     protected boolean checkNeighbors(int row, int column) {

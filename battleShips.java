@@ -195,14 +195,14 @@ public void shootPlayer(int row, int column) {
     }
 
     if (playerMoves >= 3) {
-        System.out.println("Du hast bereits 3 Zuege gemacht. Nun ist die KI dran.");
+        System.out.println("Sie haben bereits 3 Zuege gemacht. Nun ist Computer dran.");
         ai.makeAIMoves(); // KI macht ihre drei Züge
         return;
     }
 
     // Überprüfung, ob die Position bereits geschossen wurde
     if (aiField[row][column] == 'X' || aiField[row][column] == '0') {
-        throw new IllegalArgumentException("Du hast bereits auf diese Position geschossen! Wähle eine andere.");
+        throw new IllegalArgumentException("Sie haben bereits auf diese Position geschossen! Wähle eine andere.");
         //System.out.println("Du hast bereits auf diese Position geschossen! Wähle eine andere.");
         //return;
     }
@@ -227,7 +227,7 @@ public void shootPlayer(int row, int column) {
     }
 
     if (playerMoves == 3) {
-        System.out.println("Du hast 3 Züge gemacht. Jetzt ist die KI dran.");
+        System.out.println("Sie haben 3 Zuege gemacht. Jetzt ist Computer dran!");
         ai.makeAIMoves(); // KI macht ihre drei Züge
     }
 }
