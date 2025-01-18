@@ -57,7 +57,7 @@ class AIMedium {
 
         for (int i = 0; i < 3; i++) { 
             if (gameField.playerShips.isEmpty()) {
-                break;
+                return;
             }
             int[] move = findBestMove();
             int row = move[0];
@@ -73,7 +73,9 @@ class AIMedium {
                 Thread.currentThread().interrupt();
             }
         }
-        System.out.println("Der Computer hat schon seine 3 Zuege gemacht . Jetzt sind Sie dran!");
+        if(!gameField.gameOver){
+            System.out.println("Der Computer hat schon seine 3 Zuege gemacht . Jetzt sind Sie dran!");
+        }
         gameField.playerMoves = 0; 
     }
 
@@ -233,6 +235,16 @@ class AIMedium {
     }
 
     protected int[] processSquares(int[][] squares, boolean useRowStart, boolean useColStart) {
+            if(useRowStart && !useColStart){
+                int[][] restField = {{2,8},{4,8},{7,8}};
+                for(int i = 0; i < restField.length; i++){
+                    int row = restField[i][0];
+                    int col = restField[i][1];
+                    if(isValidMove(row,col)){
+                        return new int[]{row,col};
+                    }
+               }
+            }
         for (int[] square : squares) {
             int row = useRowStart ? square[0] : square[2];
             int col = useColStart ? square[1] : square[3];
@@ -378,6 +390,18 @@ class AIDifficult extends AIMedium {
         }
 
     protected int[] processSquares(List<int[]> squares, boolean useRowStart, boolean useColStart) {
+            if(useRowStart && !useColStart){
+                List<int[]> restField = new ArrayList<>(List.of(new int[]{2,8},new int[]{4,8},new int[]{7,8}));
+                Collections.shuffle(restField);
+                for(int i = 0; i < restField.size(); i++){
+                    int row = restField.get(i)[0];
+                    int col = restField.get(i)[1];
+                    if(isValidMove(row,col)){
+                        return new int[]{row,col};
+                    }
+               }
+            }
+
         Collections.shuffle(squares);
         for (int[] square : squares) {
             int row = useRowStart ? square[0] : square[2];

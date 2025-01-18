@@ -160,7 +160,7 @@ public class GameField {
             }
             for (int i = 0; i < length; i++) {
                 field[startX][startY + i] = 'S';
-                placePlayerShipTurtle(startX, startY + i, true);
+                placeShipTurtle(startX, startY + i);
             }
         } else {
             if (startX + length > 10) {
@@ -173,7 +173,7 @@ public class GameField {
             }
             for (int i = 0; i < length; i++) {
                 field[startX + i][startY] = 'S';
-                placePlayerShipTurtle(startX + i, startY, false);
+                placeShipTurtle(startX + i, startY);
             }
         }
         return true;
@@ -418,7 +418,7 @@ private void drawRedLine(Ship ship, String field) {
 }
 
 
-public void placePlayerShipTurtle(int row, int col, boolean horizontal) {
+public void placeShipTurtle(int row, int col) {
     int startX, startY;
     if (placedPlayerShips == shipLengths.length && !ai.aiShipsPlaced) {
         startX = 150;  // Base X-coordinate of the field
@@ -427,6 +427,12 @@ public void placePlayerShipTurtle(int row, int col, boolean horizontal) {
     } else {
         startX = 150;  // Base X-coordinate of the field
         startY = 105;  //
+    }
+    if(gameOver){
+       // System.out.println("HI");
+        startX = 150;
+        startY = 330;
+        turtle.color(0,0,0);
     }
     turtle.textSize = 10;
     int squareLength = 15;  // Size of one square
@@ -492,6 +498,8 @@ public String checkWinner() {
         turtle.right(90);
         System.out.println("Computer hat gewonnen!");
         gameOver = true;
+        visibleShipsPlayerAfterGameOver();
+
         promptNewGame();
         return "";
     } else if (!aiHasShips) {
@@ -509,6 +517,22 @@ public String checkWinner() {
     }
     return null; // No winner yet
 }
+
+    protected void visibleShipsPlayerAfterGameOver(){
+       // if (!playerShips.size().isEmpty()){
+      // System.out.println(aiShips.size());
+            for(int i = 0; i < aiShips.size(); i++){
+                Ship restShip = aiShips.get(i);
+                for(int j = 0; j < restShip.length(); j++ ){
+                    if(restShip.horizontal()){
+                        placeShipTurtle(restShip.row(),restShip.column() + j);
+                    }else{
+                        placeShipTurtle(restShip.row() + j,restShip.column());
+                    }
+                }
+            }
+       // }
+    }
 
 private void promptNewGame() {
     Scanner scanner = new Scanner(System.in);
@@ -579,6 +603,17 @@ private void startNewGame() {
 record Ship(int row, int column, int length, boolean horizontal){}
 
 
- 
+ /*
+ GameField g = new GameField()
+ g.placePlayerShip(0,2,true)
+ g.placePlayerShip(5,7,true)
+ g.placePlayerShip(5,2,false)
+ g.placePlayerShip(0,8,false)
 
+g.placePlayerShip(1,2,true)
+g.placePlayerShip(1,1,false)
+ g.placePlayerShip(4,1,true)
+  g.placePlayerShip(0,0,false)
+
+*/
  
