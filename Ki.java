@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Random;
 
 class AIMedium {
-    public char[][] visibleFieldAI;
+    public char[] visibleFieldAI;
     public GameField gameField;
     public boolean aiShipsPlaced = false;
     public List<int[]> lastHits = new ArrayList<>();
@@ -15,20 +15,20 @@ class AIMedium {
     AIMedium(GameField gameField) {
         this.gameField = gameField;
 
-        visibleFieldAI = new char[10][10];
-        for (int row = 0; row < 10; row++) {
-            for (int col = 0; col < 10; col++) {
-                visibleFieldAI[row][col] = '~'; 
-            }
+        visibleFieldAI = new char[100];
+        for (int i = 0; i < 100; i++) {
+            //for (int col = 0; col < 10; col++) {
+                visibleFieldAI[i] = '~'; 
+            //}
         }
         gameField.playerMoves = 0; 
     }
 
-    protected void placeAIShips() {
+    public void placeAIShips() {
         Random random = new Random();
 
-        for (int i = 0; i < gameField.shipLengths.length; i++) {
-            int length = gameField.shipLengths[i];
+        for (int i = 0; i < gameField.shipLengths.size(); i++) {
+            int length = gameField.shipLengths.get(i);
             boolean success = false;
 
             while (!success) {
@@ -50,7 +50,8 @@ class AIMedium {
 
     public void makeAIMoves() {
         if (gameField.gameOver) {
-            throw new IllegalArgumentException("Das Spiel ist bereits beendet. Keine Zuege mehr möglich.");
+            return;
+           // throw new IllegalArgumentException("Das Spiel ist bereits beendet. Keine Zuege mehr möglich.");
             //System.out.println("Das Spiel ist bereits beendet. Keine Zuege mehr möglich.");
             //return;
         }
@@ -73,17 +74,17 @@ class AIMedium {
                 Thread.currentThread().interrupt();
             }
         }
-        if(!gameField.gameOver){
+        if(!gameField.gameOver && aiShipsPlaced){
             System.out.println("Der Computer hat schon seine 3 Zuege gemacht . Jetzt sind Sie dran!");
         }
         gameField.playerMoves = 0; 
     }
 
-    protected boolean isValidMove(int row, int col) {
-        return visibleFieldAI[row][col] == '~';
+    public boolean isValidMove(int row, int col) {
+        return visibleFieldAI[gameField.toIndex(row,col)] == '~';
     }
 
-    protected int[] findBestMove() {
+    public int[] findBestMove() {
         if (!shipDirectionFound) { 
             return shootAtNeighbor();
         }
@@ -97,7 +98,7 @@ class AIMedium {
         return findCornerMove(); 
     }
 
-    protected int[] findTargetedMove() {
+    public int[] findTargetedMove() {
         if (!lastHits.isEmpty()) {
             int[] firstHit = lastHits.get(0);
 
@@ -123,7 +124,7 @@ class AIMedium {
         return findHeuristicMove();
     }
 
-    protected int[] shootHorizontalFurther() {
+    public int[] shootHorizontalFurther() {
         int[] firstHit = lastHits.get(0);
         int[] lastHitPosition = lastHits.get(lastHits.size() - 1);
 
@@ -147,7 +148,7 @@ class AIMedium {
         return findHeuristicMove();
     }
 
-    protected int[] shootVerticalFurther() {
+    public int[] shootVerticalFurther() {
         int[] firstHit = lastHits.get(0);
         int[] lastHitPosition = lastHits.get(lastHits.size() - 1);
 
@@ -171,7 +172,7 @@ class AIMedium {
         return findHeuristicMove();
     }
 
-    protected int[] shootAtNeighbor() { 
+    public int[] shootAtNeighbor() { 
         if (lastHits.size() == 1) { 
             return findTargetedMove();
         }
@@ -189,7 +190,7 @@ class AIMedium {
         return findTargetedMove();
     }
 
-    protected int[] findHeuristicMove() {
+    public int[] findHeuristicMove() {
         int[][] squares = {
             {0, 0, 2, 2}, {0, 3, 2, 5}, {0, 6, 2, 8},
             {3, 0, 5, 2}, {3, 3, 5, 5}, {3, 6, 5, 8},
@@ -209,7 +210,7 @@ class AIMedium {
         return findCornerMove(); 
     }
 
-    protected int[] findCornerMove() {
+    public int[] findCornerMove() {
         int[][] squares = {
             {0, 0, 2, 2}, {0, 3, 2, 5}, {0, 6, 2, 9},
             {3, 0, 5, 2}, {3, 3, 5, 5}, {3, 6, 5, 9},
@@ -234,13 +235,13 @@ class AIMedium {
         return findFallbackMove();
     }
 
-    protected int[] processSquares(int[][] squares, boolean useRowStart, boolean useColStart) {
+    public int[] processSquares(int[][] squares, boolean useRowStart, boolean useColStart) {
             if(useRowStart && !useColStart){
                 int[][] restField = {{2,8},{4,8},{7,8}};
                 for(int i = 0; i < restField.length; i++){
                     int row = restField[i][0];
                     int col = restField[i][1];
-                    if(isValidMove(row,col)){
+                    if(isValidMove(row,col) && checkNeighbors(row, col)){
                         return new int[]{row,col};
                     }
                }
@@ -255,10 +256,10 @@ class AIMedium {
         return new int[]{-1, -1};
     }
 
-    protected int[] findFallbackMove() {
+    public int[] findFallbackMove() {
         for (int row = 9; row >= 0; row--) {
             for (int col = 9; col >= 0; col--) {
-                if (isValidMove(row, col)) {
+                if (isValidMove(row, col) && checkNeighbors(row, col)) {
                     return new int[]{row, col};
                 }
             }
@@ -266,16 +267,26 @@ class AIMedium {
         return new int[]{-1, -1};
     }
 
-    protected boolean isInvalidMove(int[] move) {
+    public boolean isInvalidMove(int[] move) {
         return move[0] == -1 && move[1] == -1;
     }
 
+    public boolean checkNeighbors(int row, int column) {
+        // Grenzprüfungen
+        boolean upValid = row > 0 && visibleFieldAI[gameField.toIndex(row - 1,column)] == '~';
+        boolean downValid = row < 9 && visibleFieldAI[gameField.toIndex(row + 1,column)] == '~';
+        boolean leftValid = column > 0 && visibleFieldAI[gameField.toIndex(row,column - 1)] == '~';
+        boolean rightValid = column < 9 && visibleFieldAI[gameField.toIndex(row,column + 1)] == '~';
 
-    protected void makeAIShot(int row, int col) {
-        if (gameField.playerField[row][col] == 'S') { // Hit
+    return upValid || downValid || leftValid || rightValid;
+    }
+
+
+    public void makeAIShot(int row, int col) {
+        if (gameField.playerField[gameField.toIndex(row,col)] == 'S') { // Hit
             System.out.println("KI Treffer bei (" + row + ", " + col + ")");
-            visibleFieldAI[row][col] = 'X';
-            gameField.playerField[row][col] = 'X';
+            visibleFieldAI[gameField.toIndex(row,col)] = 'X';
+            gameField.playerField[gameField.toIndex(row,col)] = 'X';
             gameField.drawHit(row, col, "Player");
             lastHits.add(new int[]{row, col});
             gameField.checkAndMarkDestroyedShipsPlayer();
@@ -291,8 +302,8 @@ class AIMedium {
 
         } else { // Miss
             System.out.println("KI Fehlschuss bei (" + row + ", " + col + ")");
-            visibleFieldAI[row][col] = 'O';
-            gameField.playerField[row][col] = 'O';
+            visibleFieldAI[gameField.toIndex(row,col)] = 'O';
+            gameField.playerField[gameField.toIndex(row,col)] = 'O';
             gameField.drawMiss(row, col, "Player");
         }
     }
@@ -307,11 +318,11 @@ class AIDifficult extends AIMedium {
     }
 
     @Override
-    protected void placeAIShips() {
+    public void placeAIShips() {
         Random random = new Random();
 
-        for (int i = 0; i < gameField.shipLengths.length; i++) {
-            int length = gameField.shipLengths[i];
+        for (int i = 0; i < gameField.shipLengths.size(); i++) {
+            int length = gameField.shipLengths.get(i);
             boolean success = false;
 
             while (!success) {
@@ -335,7 +346,7 @@ class AIDifficult extends AIMedium {
     }
 
     @Override
-    protected int[] findHeuristicMove() {
+    public int[] findHeuristicMove() {
         int[][] squares = {
             {0, 0, 2, 2}, {0, 3, 2, 5}, {0, 6, 2, 8},
             {3, 0, 5, 2}, {3, 3, 5, 5}, {3, 6, 5, 8},
@@ -360,7 +371,7 @@ class AIDifficult extends AIMedium {
 
 
     @Override
-    protected int[] findCornerMove() {
+    public int[] findCornerMove() {
         List<int[]> squares = defineSquares();
 
         int[] result = processSquares(squares, true, true);
@@ -378,7 +389,7 @@ class AIDifficult extends AIMedium {
         return findFallbackMove();
     }
 
-    protected List<int[]> defineSquares() {
+    public List<int[]> defineSquares() {
         // Definiere die Quadrate
        // Erstelle eine veränderliche Liste
         return new ArrayList<>(List.of(
@@ -389,7 +400,7 @@ class AIDifficult extends AIMedium {
         ));
         }
 
-    protected int[] processSquares(List<int[]> squares, boolean useRowStart, boolean useColStart) {
+    public int[] processSquares(List<int[]> squares, boolean useRowStart, boolean useColStart) {
             if(useRowStart && !useColStart){
                 List<int[]> restField = new ArrayList<>(List.of(new int[]{2,8},new int[]{4,8},new int[]{7,8}));
                 Collections.shuffle(restField);
@@ -406,17 +417,17 @@ class AIDifficult extends AIMedium {
         for (int[] square : squares) {
             int row = useRowStart ? square[0] : square[2];
             int col = useColStart ? square[1] : square[3];
-            if (isValidMove(row, col) && checkNeighbors(row, col)) {
+            if (isValidMove(row, col) && canShipHere(row, col)) {
                 return new int[]{row, col};
             }
         }
         return new int[]{-1,-1};
     }
     @Override
-    protected int[] findFallbackMove() {
+    public int[] findFallbackMove() {
         for (int row = 9; row >= 0; row--) {
             for (int col = 9; col >= 0; col--) {
-                if (isValidMove(row, col) && checkNeighbors(row, col)) {
+                if (isValidMove(row, col) && canShipHere(row, col)) {
                     return new int[]{row, col};
                 }
             }
@@ -426,18 +437,8 @@ class AIDifficult extends AIMedium {
 
 
 
-    protected boolean checkNeighbors(int row, int column) {
-        // Grenzprüfungen
-        boolean upValid = row > 0 && visibleFieldAI[row - 1][column] == '~';
-        boolean downValid = row < 9 && visibleFieldAI[row + 1][column] == '~';
-        boolean leftValid = column > 0 && visibleFieldAI[row][column - 1] == '~';
-        boolean rightValid = column < 9 && visibleFieldAI[row][column + 1] == '~';
 
-    return upValid || downValid || leftValid || rightValid;
-    }
-
-
-    private boolean canPlaceWithoutNeighbors(int xStart, int yStart, int length, boolean horizontal) {
+    public boolean canPlaceWithoutNeighbors(int xStart, int yStart, int length, boolean horizontal) {
         // Prüfen, ob das Schiff innerhalb der Spielfeldgrenzen bleibt
         if (horizontal) {
             if (yStart + length > 10) return false;
@@ -453,7 +454,7 @@ class AIDifficult extends AIMedium {
 
         for (int x = xMin; x <= xMax; x++) {
             for (int y = yMin; y <= yMax; y++) {
-                if (gameField.aiField[x][y] != '~') {
+                if (gameField.aiField[gameField.toIndex(x,y)] != '~') {
                     return false;
                 }
             }
@@ -461,6 +462,55 @@ class AIDifficult extends AIMedium {
 
         return true;
     }
+
+    public boolean canShipHere(int row, int col){
+        List<Integer> counter = new ArrayList<>();
+        int counterHorizontal = 1;
+        int counterVertical = 1;
+                for(int forward= col + 1 ; forward <10; forward++){
+                    if(isValidMove(row,forward)){
+                        counterHorizontal ++;
+                    }else{
+                        break;
+                    }
+                }
+                for(int backward = col - 1 ; backward >= 0; backward--){
+                    if(isValidMove(row,backward)){
+                        counterHorizontal ++;
+                    }else{
+                        break;
+                    }
+                }
+
+                for(int upRow= row + 1 ; upRow < 10; upRow++){
+                    if(isValidMove(upRow,col)){
+                        counterVertical++;
+                    }else{
+                        break;
+                    }
+                }
+
+                for(int downRow = row - 1; downRow >= 0; downRow--){
+                    if(isValidMove(downRow,col)){
+                        counterVertical++;
+                    }else{
+                        break;
+                    }
+                }
+
+                counter.addAll(Arrays.asList(counterHorizontal,counterVertical));
+                return canShipFit(counter);
+        }
+
+        public boolean canShipFit(List<Integer> counter){
+            for(int shipLength : gameField.shipLengths){
+                if(shipLength <= counter.get(0) || shipLength <= counter.get(1)){
+                   return true;
+                }
+            }
+            return false;
+        }
+
 }
 
 
@@ -473,20 +523,25 @@ class AIEasy extends AIMedium {
     }
 
     @Override
-    protected int[] findHeuristicMove() {
-        Random random = new Random();
-        int row, column;
-
-        do {
-            row = random.nextInt(10);
-            column = random.nextInt(10);
-        } while (!isValidMove(row, column)); // Wiederholen, bis ein gültiger Zug gefunden wird
-
-        return new int[]{row, column};
+    public int[] processSquares(int[][] squares, boolean useRowStart, boolean useColStart) {
+        for (int[] square : squares) {
+            int row = useRowStart ? square[0] : square[2];
+            int col = useColStart ? square[1] : square[3];
+            if (isValidMove(row, col)) {
+                return new int[]{row, col};
+            }
+        }
+        return new int[]{-1, -1};
     }
-
     @Override
-    protected int[] findCornerMove() {
-        return findHeuristicMove();
+    public int[] findFallbackMove() {
+        for (int row = 9; row >= 0; row--) {
+            for (int col = 9; col >= 0; col--) {
+                if (isValidMove(row, col)) {
+                    return new int[]{row, col};
+                }
+            }
+        }
+        return new int[]{-1, -1};
     }
 }

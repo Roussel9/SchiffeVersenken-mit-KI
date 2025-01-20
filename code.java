@@ -1227,7 +1227,69 @@ private void frageNachNeuemSpiel() {
        // spielfeld.zuegeDesSpielers = 0; // Anfangszustand
     }
 
-}
+}public boolean canShipHere(int row,int col){
+        for(int i = 0; i < gameField.shipLengths.size(); i++){
+            if(gameField.shipLengths.get(i) == 2){
+                if(isValidMove(row,col+1) || isValidMove(row,col-1)|| isValidMove(row+1,col)|| isValidMove(row - 1, col)){
+                    return true;
+                }
+            }
+            if(gameField.shipLengths.get(i) = 3){
+                if((isValidMove(row,col + 1)&& isValidMove(row,col + 2) )|| (isValidMove(row, col - 1 ) && isValidMove(row,col - 2))|| (isValidMove(row, col - 1) && isValidMove(row, col + 1)) || (isValidMove(row + 1,col)&& isValidMove(row + 2, col)) ||(isValidMove(row - 1,col) && isValidMove(row - 2,col))|| (isValidMove(row - 1,col) && isValidMove(row + 1,col))) {
+                    return true;
+                }
+            }
+
+        }
+        return false;
+    }
+
+    
+    /*
+    public boolean canShipHere(int row, int col) {
+    for (int shipLength : gameField.shipLengths) {
+        boolean canPlaceHorizontally = false;
+        boolean canPlaceVertically = false;
+        int range = 1;
+        while(range <= shipLength){
+        // Prüfen, ob das Schiff horizontal passt
+        //for (int range = 0; range < shipLength; range++) 
+            if (isValidMove(row, col + range)) {
+                canPlaceHorizontally = true;
+                range = range + 1;
+            }
+            if (isValidMove(row, col - range)) {
+                canPlaceHorizontally = true;
+                range = range + 1;
+            }
+            if(range != 4 && canPlaceHorizontally){
+                canPlaceHorizontally = false;
+            }
+            
+        }
+        while(range <= shipLength){
+        // Prüfen, ob das Schiff vertikal passt
+       // for (int range = 0; range < shipLength; range++) 
+            if (isValidMove(row + range, col)) {
+                canPlaceVertically = true;
+                range = range + 1;
+            }
+            if (isValidMove(row - range, col)) {
+                canPlaceVertically = true;
+                range = range + 1;
+            }
+        }
+
+        // Wenn es entweder horizontal oder vertikal passt, kann das Schiff platziert werden
+        if (canPlaceHorizontally || canPlaceVertically) {
+            return true;
+        }
+    }
+
+    return false; // Kein passender Platz gefunden
+    }
+*/
+
 
 
 /*
@@ -1394,3 +1456,12 @@ public class Ship { // record hier spater machen
     }
 }
 */
+
+/o battleShips.java
+/o Ki.java
+
+GameField g = new GameField()
+g.placePlayerShip(3,8,false)
+g.placePlayerShip(8,5,true)
+g.placePlayerShip(1,3,true)
+g.placePlayerShip(3,3,false)
