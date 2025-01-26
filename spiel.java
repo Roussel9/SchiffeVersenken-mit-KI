@@ -28,7 +28,7 @@ public class Spiel {
         }
         zugSpieler++;
         boolean treffer = false;
-        
+
         for (Schiff schiff : schiffeKI) {
             if (schiff.treffen(zeile, spalte)) {
                 treffer = true;

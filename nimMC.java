@@ -1,6 +1,4 @@
-Clerk.markdown(
-    Text.fillOut(
-    """
+Clerk.markdown(Text.fillOut("""
     
 
     # Nim-Spiel mit Monte Carlo
@@ -16,16 +14,19 @@ Clerk.markdown(
     import java.util.stream.IntStream;
     ```
 
-    """,Text.cutOut("./nimView.java", "// klassseMove")));
+    """,Text.cutOut("./nimView.java","// klassseMove")));
+
 //klasseMove
 class Move {
     final int row, number;
+
     static Move of(int row, int number) {
         return new Move(row, number);
     }
 
     private Move(int row, int number) {
-        if (row < 0 || number < 1) throw new IllegalArgumentException("Ungültiger Zug");
+        if (row < 0 || number < 1)
+            throw new IllegalArgumentException("Ungültiger Zug");
         this.row = row;
         this.number = number;
     }
@@ -34,10 +35,8 @@ class Move {
         return "(" + row + ", " + number + ")";
     }
 }
-//klasseMove
-Clerk.markdown(
-    Text.fillOut(
-    """ 
+// klasseMove
+Clerk.markdown(Text.fillOut(""" 
 Zuerst erstelle ich durch verschaltete Schleife  eine Liste von allen möglichen Züge in einem gegeben Nim Spielstelung. Hier wird eine Liste statt Array benutzt , um problemlos Züge einzufügen.
 Dann laufe ich diese Schleife durch , um für jeden Zug  eine Anzahl 𝑁 an zufälligen Spielverläufen zu simulieren. Ich erstelle zuerst neue Instanz für jede Simulation , ich  setze den aktuellen Zug um und erstelle eine boolean Variable  für den ersten Spieler , die ich auf true setze . Denn ich nehme tatsächlich an, dass der esrte den Vorteil hat. Danach spiele ich weiter mit zufälligen Zügen, bis das Spiel vorbei ist. Das wird gemacht dank meiner randomMove() Methode von Typ Move, die die Liste von allen möglichen Zügen läuft und zufällig  ein Zug wählt.Hier ist diese Methode
 ```nimMC
@@ -117,22 +116,23 @@ public Move mcMove() {
     return bestMove; 
 }
 ```
-""",Text.cutOut("./nimMC.java", "// code ")));
+""",Text.cutOut("./nimMC.java","// code ")));
 
-
-//code
+// code
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
 class Move {
     final int row, number;
+
     static Move of(int row, int number) {
         return new Move(row, number);
     }
 
     private Move(int row, int number) {
-        if (row < 0 || number < 1) throw new IllegalArgumentException("Ungültiger Zug");
+        if (row < 0 || number < 1)
+            throw new IllegalArgumentException("Ungültiger Zug");
         this.row = row;
         this.number = number;
     }
@@ -141,10 +141,13 @@ class Move {
         return "(" + row + ", " + number + ")";
     }
 }
+
 interface NimGame {
-    
+
     Move randomMove();
+
     boolean isGameOver();
+
     String toString();
 }
 
@@ -160,8 +163,8 @@ class Nim implements NimGame {
         assert rows.length >= 1;
         assert Arrays.stream(rows).allMatch(n -> n >= 0);
         if (rows.length > 5 || !(Arrays.stream(rows).allMatch(n -> n <= 7))) {
-    throw new IllegalArgumentException("Please enter correct values");
-}
+            throw new IllegalArgumentException("Please enter correct values");
+        }
         this.rows = Arrays.copyOf(rows, rows.length);
     }
 
@@ -179,7 +182,8 @@ class Nim implements NimGame {
 
     public String toString() {
         String s = "";
-        for(int n : rows) s += "\n" + "I ".repeat(n);
+        for (int n : rows)
+            s += "\n" + "I ".repeat(n);
         return s;
     }
 
@@ -193,135 +197,129 @@ class Nim implements NimGame {
         return possibleMoves.get(r.nextInt(possibleMoves.size()));
     }
 
-public Move mcMove() {
-    ArrayList<Integer> value = new ArrayList<>();
-    ArrayList<Move> possibleMoves = new ArrayList<>();
-    int N = 10;
-    for (int i = 0; i < rows.length; i++) {
-        for (int j = 1; j <= rows[i]; j++) {
-            possibleMoves.add(Move.of(i, j));
-        }
-    }
-    for (Move currentMove : possibleMoves) {
-        int g = 0; 
-        int v = 0; 
-        for (int sim = 0; sim < N; sim++) {
-            Nim playSimulation = Nim.of(this.rows); 
-            playSimulation = playSimulation.play(currentMove);
-            boolean currentPlayerWon = true; 
-            while (!playSimulation.isGameOver()) {
-                Move randomMove = playSimulation.randomMove();
-                playSimulation = playSimulation.play(randomMove);
-                currentPlayerWon = !currentPlayerWon; 
-            }
-
-            if (currentPlayerWon) {
-                g++; 
-            } else {
-                v++; 
+    public Move mcMove() {
+        ArrayList<Integer> value = new ArrayList<>();
+        ArrayList<Move> possibleMoves = new ArrayList<>();
+        int N = 10;
+        for (int i = 0; i < rows.length; i++) {
+            for (int j = 1; j <= rows[i]; j++) {
+                possibleMoves.add(Move.of(i, j));
             }
         }
+        for (Move currentMove : possibleMoves) {
+            int g = 0;
+            int v = 0;
+            for (int sim = 0; sim < N; sim++) {
+                Nim playSimulation = Nim.of(this.rows);
+                playSimulation = playSimulation.play(currentMove);
+                boolean currentPlayerWon = true;
+                while (!playSimulation.isGameOver()) {
+                    Move randomMove = playSimulation.randomMove();
+                    playSimulation = playSimulation.play(randomMove);
+                    currentPlayerWon = !currentPlayerWon;
+                }
 
-        int gewinnProzent = (int) ((g / (double) (g + v)) * 100); 
-        value.add(gewinnProzent);
+                if (currentPlayerWon) {
+                    g++;
+                } else {
+                    v++;
+                }
+            }
 
-        
-        System.out.println("Zug: " + currentMove + ", Gewinnrate: " + gewinnProzent + "%, Gewinne: " + g + ", Verluste: " + v);
-    }
+            int gewinnProzent = (int) ((g / (double) (g + v)) * 100);
+            value.add(gewinnProzent);
 
-    int max = -1;
-    ArrayList<Move> bestMoves = new ArrayList<>();
-    for (int k = 0; k < value.size(); k++) {
-        int currentProzent = value.get(k);
-        if (currentProzent > max) {
-            max = currentProzent;
-            bestMoves.clear(); 
-            bestMoves.add(possibleMoves.get(k)); 
-        } else if (currentProzent == max) {
-            bestMoves.add(possibleMoves.get(k)); 
+            System.out.println(
+                    "Zug: " + currentMove + ", Gewinnrate: " + gewinnProzent + "%, Gewinne: " + g + ", Verluste: " + v);
         }
+
+        int max = -1;
+        ArrayList<Move> bestMoves = new ArrayList<>();
+        for (int k = 0; k < value.size(); k++) {
+            int currentProzent = value.get(k);
+            if (currentProzent > max) {
+                max = currentProzent;
+                bestMoves.clear();
+                bestMoves.add(possibleMoves.get(k));
+            } else if (currentProzent == max) {
+                bestMoves.add(possibleMoves.get(k));
+            }
+        }
+
+        Move bestMove = bestMoves.get(new Random().nextInt(bestMoves.size()));
+
+        System.out.println("Bester Zug: " + bestMove + ", mit Gewinnrate: " + max + "%");
+
+        return bestMove;
     }
-
-   
-    Move bestMove = bestMoves.get(new Random().nextInt(bestMoves.size()));
-
-    
-    System.out.println("Bester Zug: " + bestMove + ", mit Gewinnrate: " + max + "%");
-
-    return bestMove; 
-}
 }
 
 /*
-
-class NimView {
-    Nim ni;
-    Turtle turtle;
-    int x;
-    int y;
-    final int yInitial = 100;
-
-    public NimView(Turtle turtle, Nim ni) {
-        this.ni = ni;
-        this.turtle = turtle;
-        this.y = yInitial;
-    }
-
-    public NimView play(Move move) {
-        if (!ni.isGameOver()) {
-            ni = ni.play(move);
-            turtle.reset();
-            turtle.moveTo(x, y);
-            show();
-        }
-        return this;
-    }
-
-    public boolean isGameOver() {
-        return ni.isGameOver();
-    }
-
-    public String toString() {
-        show();
-        StringBuilder s = new StringBuilder();
-        for (int n : ni.rows) s.append("\n").append("I".repeat(n));
-        return s.toString();
-    }
-
-    private void show() {
-        y = yInitial;
-        for (int i = 0; i < ni.rows.length; i++) {
-            x = 100;
-            for (int j = 0; j < ni.rows[i]; j++) {
-                turtle.moveTo(x, y);
-                turtle.left(90);
-                turtle.lineWidth(10);
-                turtle.forward(50);
-                x += 50;
-                turtle.right(90).moveTo(x, y);
-            }
-            y += 60;
-            turtle.moveTo(100, y);
-        }
-    }
-}
-*/
- Clerk.markdown(
-    Text.fillOut(
-    """ 
+ * 
+ * class NimView {
+ * Nim ni;
+ * Turtle turtle;
+ * int x;
+ * int y;
+ * final int yInitial = 100;
+ * 
+ * public NimView(Turtle turtle, Nim ni) {
+ * this.ni = ni;
+ * this.turtle = turtle;
+ * this.y = yInitial;
+ * }
+ * 
+ * public NimView play(Move move) {
+ * if (!ni.isGameOver()) {
+ * ni = ni.play(move);
+ * turtle.reset();
+ * turtle.moveTo(x, y);
+ * show();
+ * }
+ * return this;
+ * }
+ * 
+ * public boolean isGameOver() {
+ * return ni.isGameOver();
+ * }
+ * 
+ * public String toString() {
+ * show();
+ * StringBuilder s = new StringBuilder();
+ * for (int n : ni.rows) s.append("\n").append("I".repeat(n));
+ * return s.toString();
+ * }
+ * 
+ * private void show() {
+ * y = yInitial;
+ * for (int i = 0; i < ni.rows.length; i++) {
+ * x = 100;
+ * for (int j = 0; j < ni.rows[i]; j++) {
+ * turtle.moveTo(x, y);
+ * turtle.left(90);
+ * turtle.lineWidth(10);
+ * turtle.forward(50);
+ * x += 50;
+ * turtle.right(90).moveTo(x, y);
+ * }
+ * y += 60;
+ * turtle.moveTo(100, y);
+ * }
+ * }
+ * }
+ */
+Clerk.markdown(Text.fillOut(""" 
     ## Versuch zum Spielen :
     ```nimMC
     Nim n = Nim.of(2,5,6);
     n.mcMove();
     ```
-    """,Text.cutOut("./nimMC.java", "// code1 ")));
-    //code1
+    """,Text.cutOut("./nimMC.java","// code1 ")));
+// code1
 
-    //code1
+// code1
 
-Clerk.markdown(
-    Text.fillOut(
-    """ 
+Clerk.markdown(Text.fillOut(""" 
 ## Beispiel von Ausgabe :
 Zug: (0, 1), Gewinnrate: 40%, Gewinne: 4, Verluste: 6
 
@@ -352,6 +350,4 @@ Zug: (2, 6), Gewinnrate: 50%, Gewinne: 5, Verluste: 5
 Bester Zug: (1, 4), mit Gewinnrate: 80%
 
    $168 ==> (1,4)
-    """,Text.cutOut("./nimView.java", "// spielstand1")));
-
-
+    """,Text.cutOut("./nimView.java","// spielstand1")));
