@@ -18,12 +18,12 @@ Obwohl ich mit diesem Hindernis zu kämpfen hatte, habe ich viel über die Grenz
 
 Meine Anwendung besteht aus ***zwei Interfaces*** (die die logische Implementierung von dem Spiel von der Vizualisierung trennt und diese beiden Interfaces werden von der Klasse Game implementiert) ,***ein record*** (,das Informationen über jedes Schiff nach Erstellung speichert ), ***vier Klassen*** (eine Klasse für Game logisch und Vizualisierung , 3 andere für die KI nämlich eine für jeden Schwierigkeitgrad. ). Am Anfang des Spiels beim Erstellen eines Objekts von der Hauptklasse Game gibt man einen Wert zwischen 1 und 3 (1 für einfachstes Niveau , 2 für Mittel , 3 für Schwer), der der entsprechende Konstruktor für die KI durch die Methode setDifficult(int difficult) setzt. Dann wird eine Startseite während 5 Sekunden angezeigt und danach das Spielfeld und es geht so los mit Spielen beziehungsweise meine Szenarien.
 
-### Szenarien 
+## Szenarien 
 
 Tatsächlich hat mein Projekt nur 5 Szenarien unter anderen : **Schiffe platzieren**, **Spielzug(Spieler)**, **Spielzug(KI)**, **zerstörte Schiffe aufdecken**, **Siegbedingung und Spielende**. Jedoch habe ich mich in den Spaß der Programmierung gestürzt und habe zusätzliche Funktionen hinzugefügt, die ursprünglich nicht geplant waren. Wie zum Beispiel die Funktionalität ***Startseite***(die nur während 5 Sekunden angezeigt wird) , ***Aufdeckung nach Spielende von nicht zerstörten Schiffen des Computers*** und auch Schwierigkeitgrad (war geplant aber unsicher ). Jetzt möchte ich auf das erste Szenario eingehen    
 
 
-I. **Szenario 1: Schiffe Platzieren**
+## I. Szenario 1: Schiffe Platzieren
 
 Zu beachten ist das jeder Spieler in meiner Anwendung 4 Schiffe(die nacheinander platziert werden können) hat und die Schiffe werden nach Reihenfolge von Längen platziert. Das habe ich erreicht, indem ich eine Liste (mit Werten 2,3,4,5) als Objektvariable in klasse Game habe und diese Liste wird durchgelaufen und ein Schiff nimmt an jeder Position als Länge den Wert auf diesen Index  . Das heisst erstes Schiff ist immer automatisch von Länge 2 , zweites Schiff automatisch von Länge 3 , drittes Schiff von Länge 4 , viertes Schiff von Länge 5. Als logisch java habe ich 3 wichtige Methoden , um Schiffe zu Platzieren .Da die KI-Schiffe erst automatisch platziert werden , nachdem der Spieler seine Schiffe platziert hat, beginnen wir mit der boolischen Methode placePlayerShip(int row, int column, boolean horinzontal). 
 
@@ -157,7 +157,7 @@ g.placePlayerShip(1,0,true);
 
 g.placePlayerShip(5,9,false);
 
-II. **Szenario 2: Spielzug(Spieler)**
+## II. Szenario 2: Spielzug(Spieler)
 
 Jeder Spieler darf pro Runde 3 Mal spielen , das heisst 3 Züge pro Runde . Der menschlichen Spieler zuerst mal dran und macht einen Zug auf eine Position auf dem Spielfeld vom Computer durch die Methode shootPlayer(int row, int column).
 
@@ -262,7 +262,7 @@ g.shootPlayer(2,5)
 g.shootPlayer(9,0)
 
 
-III. **Szenario 3: Spielzug(KI)**
+## III. Szenario 3: Spielzug(KI)
 
 Wenn das Spiel nicht zum Ende ist und es Schiffe auf dem Spielfeld des Spielers gibt, spielt die KI auch wie der Spieler 3 Mal pro Runde , deshalb habe ich eine forSchleife , die ich durchlaufe. Damit das Spiel realitisch ist , habe ich eine Sekunde Wartezeit zwischen Zügen hinzufügt. 
 
@@ -300,11 +300,11 @@ Wenn das Spiel nicht zum Ende ist und es Schiffe auf dem Spielfeld des Spielers 
 
 ```
 
-1. ### Gemeinsame Funktionalitäten von unterschielichen Schwierigkeitgrads
+### 1. Gemeinsame Funktionalitäten von unterschielichen Schwierigkeitgrads
 
 Die 3 unterschiedlichen Niveau (***einfach***, ***mittel***, ***schwer***) haben im Hintergrund das gleiche Prinzip. Hier habe ich viele Hilfsmethode benutzt, die als Rückgabetyp ***Optional<int[]>***, um ungültige Rückgabewerte wie {-1,-1} zu vermeiden. Bei Implementierung habe ich viel überlegt , wie die KI seine Schüsse am Anfang machen kann, da die Schiffe von Gegner verbogen sind. Ich wollte mich auf Random nicht verlassen .Denn eine effiziente KI soll meiner Meinung nach nicht auf Random basierend sein . Bei random könnte die KI zum Beispiel nur auf eine Seite vom Spielfeld Schliessen, was nicht optimal wäre .Deshalb habe ich das Spielfeld vom Spieler in 3 Quadrate unterteilt und habe so gestaltet das sie zuerst auf Mittel(durch die Methode **Optional<int[]> findHeuristicMove()**) von jedem Quadrat schliesst . Nur wenn auf alle Mitte gesclhossen wurde , macht sie das Gleiche bei Ecken(durch Methode **Optional<int[]> findCornerMove()**) .Das heisst , eine gleiche Ecke auf alle Quadrat und so bis Ecke fertig sind . Hier sind wir immer in Fällen vom Anfang oder Suche von heuristischer Position nach ganzer Zerstörung eines Schiffs. Wenn es mit Mittel und Ecken fertig ist, dann schliesst sie vom Ende des Spielfelds bis Anfang(durch die Methode **Optional<int[]> findFallbackMove()**), um immer einen Teil von einem Schiff zu finden. Effizienter wird es ,wenn die KI auf eine Position(auf ein Mittel eines Quadrats , Ecke oder irgendwo) ein Treffer bekommen hat(ich habe eine Liste **lastHits**, die alle Treffer von KI speichert und wenn ein Schiff zerstört wird , werden alle Treffer von diesem Schiff aus der Liste entfernt ). Er priosiert dann nur Nachbarn von dieser Position , um einen zweiten Treffer zu haben(durch die Methode **Optional<int[]> findTargedMove()**). bekommt sie einen zweiten Treffer dann geht sie nur weiter auf diese Richtung . Das heisst , wenn sie zum Beispiel auf (2,3) einen Treffer hat und einen anderen auf (3,3) , soll er weiter vertikal schliessen (die zuständige Methode dafür ist **Optional<int[]> shootVerticalFurther()** ) . Zuerst unter weiter und dann oben weiter (falls das entsprechende Schiff noch nicht zerstört) . wenn sie zweiten Treffer eher auf Position(2,4) bekommt , macht sie das Gleiche aber horizontal(durch die Methode **Optional<int[]> shootHorizontalFurther()**). Da Schiffe in meiner Anwendung nebeneinander platziert werden können , könnte passieren, dass sie auf eine Richtung alle Symbole "S" geschlossen hat aber kein Schiff ganz zerstört wurde(da diese "S" Symbole Teile von verschiedenen Schiffen sind) oder ein Schiff wurde zerstört aber eine getroffene Position nicht von diesem Schiff gehört. Deswegen habe ich eine Methode implementiert, die mit einer Kopie von Liste **lastHits** alle Schiffe zerstört , zu denen diese unterschielichen Treffer gehören . Die Methode **makeAIShoot(int row, int col)** ist dafür zuständig, bei Fehlschuss oder Treffer das entsprechende Symbol darzustellen. Das Gleiche mache ich auch in meinem interne Array  **visibleFieldAI** (die als Attribut in der Klasse auch mit Länge 100 initialisiert wurde).Dank dieses Arrays schliesst die KI niemals auf eine schon geschlossene Position . Da die Methode **isValidMove(int row, int col)** überprüft , ob die angegebene Position im visibleFieldAI leer, bevor den Zug gemacht wird. Jetzt gehe ich auf Besonderheit von jedem Schwierigkeitgrad ein.
 
-2. ### Einfach 
+### 2. Einfach 
 
 Besonders hier ist zuerst, dass die **checkNeighbors(int row, int col)** nicht berücksichtigt wird. Diese Methode sorgt normalerweise dafür , dass die KI bei Suchen von ersten Treffer nur Schliesst , wenn mindestens ein Nachbar leer ist. Hier in diesen beiden Methoden habe ich diese Überprüfung entfernt, um es weniger effizient zu machen. Die Methoden **Optional<int[]> processSquare(int[][] square, boolean useRowStart,boolean useColStart)** wurde auch überschrieben , um ein Column zu entfernen , sodass es weniger effizient ist , da auf alle Columns zumindest ausser dieses früher geschlossen würde. Aber erst in findFallbackMove() wird später im Spielverlauf geschlossen würden
 
@@ -334,7 +334,7 @@ Besonders hier ist zuerst, dass die **checkNeighbors(int row, int col)** nicht b
 
 ```
 
-3. ### Mittel 
+### 3. Mittel 
 
 Dieses Niveau ist besonders , weil es das einzige ist , das diese checkNeighbors(int row, int column). Was genau im Schwierigkeitgrad "einfach" entfent wurde.
 
@@ -350,7 +350,7 @@ Dieses Niveau ist besonders , weil es das einzige ist , das diese checkNeighbors
     }
 
 ```
-4. ### Schwer
+### 4. Schwer
 
 Hier gibt es einige Besonderheiten, die gemacht wurden. Zuerst habe ich die Liste vom Ecke und Mittel vom Quadrat mit ***collection.schuffle(list)*** vor jedem Zug zufällig gemacht. Ich habe auch dann noch eine Methode **canShipHere(int row, int col)**, die vor einem Schuss immer überprrüft, ob es sinnvoll wäre auf diese Position zu schliessen. Diese Überprüfung wird gemacht , indem ich die Liste von Länge der Schiffe durchlaufe und zähle horinzontal und vertical ob nebeneinandere Positionen auf eine Richtung mehr oder gleich ein Länge in dieser Liste ist . Und nach Zerstörung eines Schiffs wird seine Länge in dieser Liste entfernt
 
@@ -408,9 +408,173 @@ Hier gibt es einige Besonderheiten, die gemacht wurden. Zuerst habe ich die List
 
 Wenn die KI seine Züge macht, wird nach jedem Zug angezeigt(in jshell) ob es ein Treffer oder Fehlschuss ist und auf welche Position . Und wenn er seine 3 Züge gemacht hat , wird eine Meldung(in jshell) angegeben,  dass der Spieler spielen kann
 
-IV. **Zerstörte Schiffe aufdecken**
+## IV. Zerstörte Schiffe aufdecken
 
-Nach einem 
+Mein viertes Szenario besteht darin , dass ein Schiff aufgedeckt werden soll , wenn es komplett zerstört ist . Das stelle ich in meiner Darstellung mit einer rote Linie dar . Um diese Funktionalität in meiner Anwendung zu erreichen, habe ich 2 Methoden implementiert nämlich **checkAndMarkDestroyedShipsAI()** und **checkAndMarkDestroyedShipsPlayer()**. Diese beiden Methoden laufen jeweils die Liste von gespeicherten Schiffen nach der Erstellung und ruft bei jedem Schiff die Methode **isShipDestroyed(Ship ship, char[] field)** , die überprüft ob dieses Schiff nur das Symbol "X" besitzt und wenn der Fall ist "true" zurückgibt. Danach rufe ich die Methode **drawRedLine(Ship ship, String field)**, die dafür zuständig ist, die rote Linie in der Mitte vom Schiff darzustellen und ich entferne zum Schluss dieses Schiff aus der Liste von gespeicherten Schiffen. Bei Schiffen von Spieler ist diese Methode ein bisschen komplexer. Dort muss die Liste ***lastHits*** berücksichtigt werden: wenn sie zum Beispiel Treffer von nur einem Schiff enthält , kann sie einfach danach nur gelerrt werden . Aber wenn sie auch Treffer von anderen Schiffen enthält (da Schiffe nebeneinander platziert werden können), müssen Treffer entfernt werden , die nur zu dem zu zerstörten Schiff gehören. Wenn das gemacht wird dann initialisiere ich die Variablen ***shipDirectionFound***(benutzt ab 2 Treffer , um eine Richtung zu haben) und ***isHorinzontal***(benutzt zum wissen , ob die Richtung horizontal oder vertikal ist) auf false .
+
+```battleShipWithKI
+
+    public void checkAndMarkDestroyedShipsAI() {
+        for (int i = 0; i < aiShips.size(); i++) {
+            Ship ship = aiShips.get(i);
+            if (isShipDestroyed(ship, aiField)) {
+                System.out.println("Ein Schiff des Computers komplett zerstoert");
+                drawRedLine(ship, "AI");
+                aiShips.remove(i);
+                i--;
+            }
+        }
+    }
+
+    public void checkAndMarkDestroyedShipsPlayer() {
+        for (int j = 0; j < playerShips.size(); j++) {
+            Ship ship = playerShips.get(j);
+            if (isShipDestroyed(ship, playerField)) {
+                if (ship.length() < ai.lastHits.size()) {
+                    int startRow = ship.row(), startCol = ship.column();
+                    if (ship.horizontal()) {
+                        int endCol = startCol + ship.length() - 1;
+                        for (int i = startCol; i <= endCol; i++) {
+                            removeHitFromList(ai.lastHits, startRow, i);
+                        }
+                    } else {
+                        int endRow = startRow + ship.length() - 1;
+                        for (int i = startRow; i <= endRow; i++) {
+                            removeHitFromList(ai.lastHits, i, startCol);
+                        }
+
+                    }
+                } else {
+                    ai.lastHits.clear();
+                }
+
+                System.out.println("Ein Schiff des Spielers komplett zerstört");
+                drawRedLine(ship, "Player");
+                ai.shipDirectionFound = false;
+                ai.isHorizontal = false;
+                shipLengths.remove(Integer.valueOf(ship.length()));
+                playerShips.remove(ship);
+                j--;
+            }
+        }
+    }
+
+```
+
+## V. Siegbedingung und Spielende
+
+Hier geht es darum, zum prüfen (nach jedem Schuss als Treffer), ob es auf einem Spielfeld überhaupt kein Symbol "S" mehr gibt . In dem Fall würde bedeutet: der Spieler , dessen Spielfeld kein "S" Symbol hat , hat verloren . Da seine Schiffe komplett zerstört wurden. Das erreiche ich durch die Methode **checkWinner()**. Wer gewonnen hat , wird sowohl in jshell als auch in Browser (unter) angezeigt . Ich rufe danach die methode **newGameOrFinish()** auf, die fragt, ob der Benutzer das Spiel neue Starten oder beenden will.
+
+```battleShipWithKI
+
+    public String checkWinner() {
+        boolean playerHasShips = hasShips(playerField);
+        boolean aiHasShips = hasShips(aiField);
+
+        if (!playerHasShips) {
+            turtle.textSize = 30;
+            turtle.left(90).moveTo(250, 520).color(255, 0, 0).text("Computer hat gewonnen!").right(90);
+            System.out.println("Computer hat gewonnen!");
+            gameOver = true;
+            visibleShipsPlayerAfterGameOver();
+            newGameOrFinish();
+            return "";
+        } else if (!aiHasShips) {
+            turtle.textSize = 30;
+            turtle.left(90).moveTo(250, 520).color(50, 205, 50).text("Sie haben gewonnen!").right(90);
+            System.out.println("Sie haben gewonnen!");
+            gameOver = true;
+            newGameOrFinish();
+            return "";
+        }
+        return null;
+    }
+
+    private boolean hasShips(char[] field) {
+        return IntStream.range(0, field.length)
+                .anyMatch(i -> field[i] == 'S');
+    }
+
+    public void newGameOrFinish(){
+        turtle.moveTo(250, 540);
+        turtle.textSize = 12;
+        turtle.left(90);
+        turtle.color(50, 205, 50);
+        turtle.text("Wollen Sie ein neues Spiel starten oder das Spiel beenden?");
+        turtle.right(90);
+        turtle.color(0,0,0);
+    }
+
+```
+
+## Zusächliche Funktionalitäten
+
+- Nicht zerstörte Schiffe nach Spielende sichtbar machen:
+
+Wenn der Computer gewinnt, dann können seine Schiffe wieder sichtbar . So weisst der Spieler zumindest die Position. Das erreiche ich durch die folgende Methode
+
+```battleShipWithKI
+
+    public void visibleShipsPlayerAfterGameOver() {
+        for (int i = 0; i < aiShips.size(); i++) {
+            Ship restShip = aiShips.get(i);
+            for (int j = 0; j < restShip.length(); j++) {
+                if (restShip.horizontal()) {
+                    placeShipTurtle(restShip.row(), restShip.column() + j);
+                } else {
+                    placeShipTurtle(restShip.row() + j, restShip.column());
+                }
+            }
+        }
+    }
+
+```
+
+- Methoden **startNewGame(int difficulty)** und **gameIsFinish()**
+
+Dank dieser Methoden kann das Spiel zu Jederzeit neu gestartet werden oder beendet werden: Das heisst im Laufe des Spiels oder am Ende des Spiel . Um neu starten zu können werden fast alle Attribute von Klassen einfach wie im Konstruktoren initialisiert, nachdem ich das Turtle ganz reset() habe.
+
+```battleShipWithKI
+
+    public void startNewGame(int difficulty) {
+        if(difficulty < 1 || difficulty > 3){
+            throw new IllegalArgumentException("Schwierigkeitgrad muss zwischen 1 und 3 liegen");
+        }
+        turtle.reset();
+        Arrays.fill(aiField, '~');
+        Arrays.fill(playerField, '~');
+        placedPlayerShips = 0;
+        ai.aiShipsPlaced = false;
+        playerMoves = 0;
+        gameOver = false;
+        playerShips.clear();
+        aiShips.clear();
+        shipLengths.clear();
+        shipLengths = new ArrayList<>(List.of(2, 3, 4, 5));
+        setDifficulty(difficulty);
+        drawStartScreen(difficulty);
+        turtle.reset();
+        drawGameField("Player");
+        drawGameField("AI");
+        ai.visibleFieldAI = new char[100];
+        Arrays.fill(ai.visibleFieldAI, '~');
+        ai.lastHits.clear();
+    }
+
+    public void gameIsFinish(){
+        gameOver = true;
+        turtle.textSize = 12;
+        turtle.left(90);
+        turtle.moveTo(250, 560);
+        turtle.text("Das Spiel ist beendet! Bis nächstes Mal");
+        turtle.right(90);
+    }
+
+
+```
+## Schluss
+
+Ich habe in diesem Projekt von Anfang bis Ende viel investiert und immer mit Spass und Geis gearbeitet. Jedoch war das Projekt für mich eine grosse Herausforderung. Denn mein Ziel war, mich zu überzeugen, dass ich nach 2 Semestern gut anwenden kann , was ich gelernt habe. Aber es ist nur den Begin denn meine nächste Herausforderung wäre dieses Projekt danach (in Ferien warscheinlich ) mit meinem eigenen View zu machen. Ich bin trotzdem sehr stolz auf mich, nicht nur denn ich ein anspruchvolle Anwendung gemacht habe , sondern auch denn ich es geschafft habe. Obwohl ich einige Schwierigkeiten oft getroffen habe , war ich immer vom Anfang bis Ende sicher, dass ich etwas von selbst schaffen könnte. Mein Wissen in java haben sich stark verdoppelt denn ich habe normalerweise immer viele Recherche gemacht und gelernt, dass es vieles gaben , die ich nicht wusste oder wusste aber nicht gut anwenden konnte . Das ist letztendlich meiner Dozentin zustehen . Ohne Ihre Pedagogie , Leidenschaft und Anforderungen hätte ich das nicht schaffen können . Ich danke Ihnen ***Frau Krümmel*** , mir die Grundlage von Programmierung beigebracht zu haben.  
 
 """, Text.cutOut("./battleShipWithKI.java", "// myFirstTurtle")));
 
@@ -461,6 +625,8 @@ public interface GameVisualization {
 
     void visibleShipsPlayerAfterGameOver();
 
+    void newGameOrFinish();
+
     void gameIsFinish();
 }
 
@@ -496,7 +662,7 @@ public class Game implements GameLogic, GameVisualization {
         drawGameField("AI");
     }
 
-    public void setDifficulty(int difficulty) {
+    private void setDifficulty(int difficulty) {
         switch (difficulty) {
             case 1 -> ai = new AIEasy(this);
             case 2 -> ai = new AIMedium(this);
@@ -526,7 +692,7 @@ public class Game implements GameLogic, GameVisualization {
         }
     }
 
-    public String getDifficultyText(int difficulty) {
+    private String getDifficultyText(int difficulty) {
         return "Gewählter Schwierigkeitsgrad: " + switch (difficulty) {
             case 1 -> "Einfach";
             case 2 -> "Mittel";
@@ -722,14 +888,14 @@ public class Game implements GameLogic, GameVisualization {
         }
     }
 
-    public boolean isShipDestroyed(Ship ship, char[] field) {
+    private boolean isShipDestroyed(Ship ship, char[] field) {
         return IntStream.range(0, ship.length())
                 .allMatch(i -> field[toIndex(
                         ship.horizontal() ? ship.row() : ship.row() + i,
                         ship.horizontal() ? ship.column() + i : ship.column())] == 'X');
     }
 
-    public void removeHitFromList(List<int[]> list, int row, int column) {
+    private void removeHitFromList(List<int[]> list, int row, int column) {
         list.removeIf(hit -> hit[0] == row && hit[1] == column);
     }
 
@@ -821,7 +987,7 @@ public class Game implements GameLogic, GameVisualization {
         return null;
     }
 
-    boolean hasShips(char[] field) {
+    private boolean hasShips(char[] field) {
         return IntStream.range(0, field.length)
                 .anyMatch(i -> field[i] == 'S');
     }

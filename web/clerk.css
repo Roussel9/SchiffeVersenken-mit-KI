@@ -5,11 +5,17 @@ body {
     margin: auto;
     padding: 20px;
     color: #333;
-    background-color: #d52323a4;
+    background-color: #aba5a5e7;
 }
 
-h1, h2, h3, h4, h5, h6 {
-    color: #222;
+h1, h2 {
+    color: #072bb0;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+h3, h4, h5 {
+    color: #e3eb0d;
     margin-top: 1.5em;
     margin-bottom: 0.5em;
 }
@@ -43,7 +49,7 @@ blockquote {
 
 code {
     font-family: 'Courier New', monospace;
-    background-color: #eee;
+    background-color: #9cf483;
     padding: 0px 0px;
     font-size: 90%;
 }
