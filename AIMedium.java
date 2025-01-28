@@ -2072,6 +2072,229 @@ import java.util.Random;
     }
 }
 
+
+
+public boolean placeShip(char[] field, int startX, int startY, int length, boolean horizontal) {
+        if (horizontal) {
+            if (startY + length > 10)
+                return false;
+            for (int i = 0; i < length; i++) {
+                if (field[toIndex(startX, startY + i)] != '~')
+                    return false;
+            }
+
+            IntStream.range(0, length).forEach(i -> {
+                field[toIndex(startX, startY + i)] = 'S';
+                placeShipTurtle(startX, startY + i);
+            });
+        } else {
+            if (startX + length > 10)
+                return false;
+            for (int i = 0; i < length; i++) {
+                if (field[toIndex(startX + i, startY)] != '~')
+                    return false;
+            }
+
+            IntStream.range(0, length).forEach(i -> {
+                field[toIndex(startX + i, startY)] = 'S';
+                placeShipTurtle(startX + i, startY);
+            });
+        }
+        return true;
+    }
+
+
+
+
+
+public void placeShipTurtle(int row, int col) {
+    int startX = 150, startY;
+    if (gameOver) {
+        startY = 330;
+        turtle.color(0, 0, 0);
+    } else if (placedPlayerShips == shipLengths.size() && !ai.aiShipsPlaced) {
+        startY = 330;
+        turtle.color(173, 216, 230);
+    } else {
+        startY = 105;
+    }
+
+    turtle.textSize = 10;
+    int squareLength = 15;
+    int targetX = startX + (col * squareLength);
+    int targetY = startY + (row * squareLength);
+
+    turtle.penUp()
+          .moveTo(targetX, targetY)
+          .penDown();
+
+    int textX = targetX + squareLength / 2;
+    int textY = targetY + squareLength / 2;
+
+    turtle.penUp()
+          .right(90)
+          .moveTo(textX, textY)
+          .penDown()
+          .text("S")
+          .left(90)
+          .color(0, 0, 0);
+}
+
+
+
+  public void shootPlayer(int row, int column) {
+        assert row >= 0 && row <= 9 && column >= 0 && column <= 9 : "Position muss im Spielfeld sein.";
+        if (gameOver)
+            throw new IllegalArgumentException("Das Spiel ist bereits beendet. Keine Zuege mehr moeglich.");
+        if (aiShips.isEmpty()) {
+            throw new IllegalArgumentException("Es gibt kein Schiff auf dem Spielfeld");
+        }
+
+        if (playerMoves >= 3) {
+            System.out.println("Sie haben bereits 3 Zuege gemacht. Nun ist Computer dran.");
+            ai.makeAIMoves();
+            return;
+        }
+
+        if (aiField[toIndex(row, column)] == 'X' || aiField[toIndex(row, column)] == '0') {
+            throw new IllegalArgumentException("Sie haben bereits auf diese Position geschossen! Wähle eine andere.");
+        }
+
+        if (aiField[toIndex(row, column)] == 'S') {
+            System.out.println("Treffer!");
+            aiField[toIndex(row, column)] = 'X';
+            playerMoves++;
+            drawHit(row, column, "AI");
+            checkAndMarkDestroyedShipsAI();
+            String winner = checkWinner();
+            if (winner != null) {
+                System.out.println(winner);
+            }
+        } else {
+            System.out.println("Fehlschuss!");
+            aiField[toIndex(row, column)] = '0';
+            drawMiss(row, column, "AI");
+            playerMoves++;
+        }
+
+        if (playerMoves == 3 && !gameOver) {
+            System.out.println("Sie haben 3 Zuege gemacht. Jetzt ist Computer dran!");
+            ai.makeAIMoves();
+        }
+    }
+
+
+    public void makeAIShot(int row, int col) {
+        if (game.playerField[game.toIndex(row, col)] == 'S') { 
+            System.out.println("KI Treffer bei (" + row + ", " + col + ")");
+            visibleFieldAI[game.toIndex(row, col)] = 'X';
+            game.playerField[game.toIndex(row, col)] = 'X';
+            game.drawHit(row, col, "Player");
+            lastHits.add(new int[] { row, col });
+            game.checkAndMarkDestroyedShipsPlayer();
+            if (lastHits.size() > 1) {
+                shipDirectionFound = true;
+                isHorizontal = lastHits.get(0)[0] == lastHits.get(1)[0];
+            }
+
+            String winner = game.checkWinner();
+            if (winner != null) {
+                System.out.println(winner);
+            }
+
+        } else {
+            System.out.println("KI Fehlschuss bei (" + row + ", " + col + ")");
+            visibleFieldAI[game.toIndex(row, col)] = 'O';
+            game.playerField[game.toIndex(row, col)] = 'O';
+            game.drawMiss(row, col, "Player");
+        }
+    }
+
+
+    public void checkAndMarkDestroyedShipsPlayer() {
+        for (int j = 0; j < playerShips.size(); j++) {
+            Ship ship = playerShips.get(j);
+            if (isShipDestroyed(ship, playerField)) {
+                if (ship.length() < ai.lastHits.size()) {
+                    int startRow = ship.row(), startCol = ship.column();
+                    if (ship.horizontal()) {
+                        int endCol = startCol + ship.length() - 1;
+                        for (int i = startCol; i <= endCol; i++) {
+                            removeHitFromList(ai.lastHits, startRow, i);
+                        }
+                    } else {
+                        int endRow = startRow + ship.length() - 1;
+                        for (int i = startRow; i <= endRow; i++) {
+                            removeHitFromList(ai.lastHits, i, startCol);
+                        }
+
+                    }
+                } else {
+                    ai.lastHits.clear();
+                }
+
+                System.out.println("Ein Schiff des Spielers komplett zerstört");
+                drawRedLine(ship, "Player");
+                ai.shipDirectionFound = false;
+                ai.isHorizontal = false;
+                shipLengths.remove(Integer.valueOf(ship.length()));
+                playerShips.remove(ship);
+                j--;
+            }
+        }
+    }
+
+
+public void checkAndMarkDestroyedShipsPlayer() {
+        playerShips.stream()
+                .filter(ship -> isShipDestroyed(ship, playerField))
+                .forEach(ship -> {
+                    if (ship.length() < ai.lastHits.size()) {
+                        clearHitsOnShip(ship);
+                        System.out.println(ai.lastHits.size());
+                    } else {
+                        System.out.println(ai.lastHits.size());
+                        ai.lastHits.clear();
+                    }
+
+                    System.out.println("Ein Schiff des Spielers komplett zerstört");
+                    drawRedLine(ship, "Player");
+
+                    ai.shipDirectionFound = false;
+                    ai.isHorizontal = false;
+                    shipLengths.remove(Integer.valueOf(ship.length()));
+                    System.out.println(shipLengths.size());
+                    playerShips.remove(ship);
+                    System.out.println(ship.length());
+                });
+    }  
+
+
+
+    public boolean canPlaceWithoutNeighbors(int xStart, int yStart, int length, boolean horizontal) {
+        if (horizontal) {
+            if (yStart + length > 10)
+                return false;
+        } else {
+            if (xStart + length > 10)
+                return false;
+        }
+        int xMin = Math.max(0, xStart - 1);
+        int xMax = Math.min(9, horizontal ? xStart + 1 : xStart + length);
+        int yMin = Math.max(0, yStart - 1);
+        int yMax = Math.min(9, horizontal ? yStart + length : yStart + 1);
+
+        for (int x = xMin; x <= xMax; x++) {
+            for (int y = yMin; y <= yMax; y++) {
+                if (game.aiField[game.toIndex(x, y)] != '~') {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+    
 /*
  Game g = new Game()
  g.placePlayerShip(0,2,true)
@@ -2085,3 +2308,8 @@ g.placePlayerShip(1,1,false)
   g.placePlayerShip(0,0,false)
 
 */
+
+g.placePlayerShip(1,1,false)
+g.placePlayerShip(1,2,false)
+g.placePlayerShip(1,3,true)
+g.placePlayerShip(7,3,true)
