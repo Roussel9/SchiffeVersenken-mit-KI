@@ -413,12 +413,12 @@ public class Game implements GameLogic, GameVisualization {
         boolean aiHasShips = hasShips(aiField);
 
         if (!playerHasShips) {
-            declareWinner("Computer hat gewonnen!", 255, 0, 0);
+            declareWinner("Computer hat gewonnen 🎉🏆!", 255, 0, 0);
             visibleShipsPlayerAfterGameOver();
             newGameOrFinish();
             return "";
         } else if (!aiHasShips) {
-            declareWinner("Sie haben gewonnen!", 50, 205, 50);
+            declareWinner("Sie haben gewonnen🎉🏆!", 50, 205, 50);
             newGameOrFinish();
             return "";
         }
@@ -794,7 +794,7 @@ public class AIMedium {
                 int row = restField[i][0];
                 int col = restField[i][1];
                 if (isValidMove(row, col) && checkNeighbors(row, col)) {
-                    return Optional.of(new int[] { row, col }); // Rückgabe als Optional
+                    return Optional.of(new int[] { row, col }); 
                 }
             }
         }
@@ -803,7 +803,7 @@ public class AIMedium {
             int row = useRowStart ? square[0] : square[2];
             int col = useColStart ? square[1] : square[3];
             if (isValidMove(row, col)) {
-                return Optional.of(new int[] { row, col }); // Rückgabe als Optional
+                return Optional.of(new int[] { row, col }); 
             }
         }
 
@@ -1060,7 +1060,7 @@ Clerk.markdown(
 
 _Roussel Dongmo_, _Programmierung Projekt_
 
-Das Projekt ´Schiffe versenken´ ist eine digitale Umsetzung des klassischen Strategie- und Ratespiels, das üblicherweise von zwei Spielern gespielt wird. Ziel des Spiels ist es, die Flotte des Gegners zu zerstören, indem man die Positionen der Schiffe errät und diese gezielt angreift. Die Implementierung kombiniert Logik, Benutzerinteraktion und eine visuelle Darstellung des Spielfelds. In meiner Anwendung geht es um die minimale Version dieses Spiels , indem ich weder reale Schiffe noch alle Funktionalitäten der bekannten Anwendung eingesetzt habe. Trotzdem war dieses Projekt eine große Herausforderung für mich, da es mein erstes Programmierprojekt ist. Von Anfang bis Ende habe ich mit Begeisterung und Fleiß daran gearbeitet, auch wenn ich manchmal auf erhebliche Schwierigkeiten gestoßen bin. Besonders anspruchsvoll war die Implementierung der Logik für die KI (Computergegner).
+Das Projekt 'Schiffe versenken' ist eine digitale Umsetzung des klassischen Strategie- und Ratespiels, das üblicherweise von zwei Spielern gespielt wird. Ziel des Spiels ist es, die Flotte des Gegners zu zerstören, indem man die Positionen der Schiffe errät und diese gezielt angreift. Die Implementierung kombiniert Logik, Benutzerinteraktion und eine visuelle Darstellung des Spielfelds. In meiner Anwendung geht es um die minimale Version dieses Spiels , indem ich weder reale Schiffe noch alle Funktionalitäten der bekannten Anwendung eingesetzt habe. Trotzdem war dieses Projekt eine große Herausforderung für mich, da es mein erstes Programmierprojekt ist. Von Anfang bis Ende habe ich mit Begeisterung und Fleiß daran gearbeitet, auch wenn ich manchmal auf erhebliche Schwierigkeiten gestoßen bin. Besonders anspruchsvoll war die Implementierung der Logik für die KI (Computergegner).
 
 Nicht, weil ich keine Ideen hatte, sondern weil ich mich verpflichtet fühlte, den Minimax-Algorithmus zu verwenden. In meinem Funktionsversprechen hatte ich erwähnt, dass ich 'einen geeigneten Algorithmus wie Minimax' implementieren würde. Im Nachhinein betrachtet, war das keine optimale Entscheidung. Zu diesem Zeitpunkt hatte ich noch nicht genügend Wissen über den Minimax-Algorithmus, um zu erkennen, dass es Spiele gibt, bei denen er nicht geeignet oder relevant ist – und "Schiffe versenken" gehört dazu.
 
@@ -1583,7 +1583,7 @@ Dank dieser Methoden kann das Spiel zu Jederzeit neu gestartet werden oder beend
 
 Ich habe in diesem Projekt von Anfang bis Ende viel investiert und immer mit Spass und Geis gearbeitet. Jedoch war das Projekt für mich eine grosse Herausforderung. Denn mein Ziel war, mich zu überzeugen, dass ich nach 2 Semestern gut anwenden kann , was ich gelernt habe. Aber es ist nur den Begin denn meine nächste Herausforderung wäre dieses Projekt danach (in Ferien warscheinlich ) mit meinem eigenen View zu machen. Ich bin trotzdem sehr stolz auf mich, nicht nur denn ich ein anspruchvolle Anwendung gemacht habe , sondern auch denn ich es geschafft habe. Obwohl ich einige Schwierigkeiten oft getroffen habe , war ich immer vom Anfang bis Ende sicher, dass ich etwas von selbst schaffen könnte. Mein Wissen in java haben sich stark verdoppelt denn ich habe normalerweise immer viele Recherche gemacht und gelernt, dass es vieles gaben , die ich nicht wusste oder wusste aber nicht gut anwenden konnte . Das ist letztendlich meiner Dozentin zustehen . Ohne Ihre Pedagogie , Leidenschaft und Anforderungen hätte ich das nicht schaffen können . Ich danke Ihnen ***Frau Krümmel*** , mir die Grundlage von Programmierung beigebracht zu haben.  
 
-""", Text.cutOut("./battleShipWithKI.java", "// myFirstTurtle")));
+""", Text.cutOut("./battleShipWithKI.java", "//")));
 
 /*
 ```battleShipWithKI
