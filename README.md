@@ -14,7 +14,7 @@ Dieses Projekt ist mein **erstes Java-Programmierprojekt** und zeigt meine Fähi
 
 ## Technologien & Tools
 - **Sprache:** Java  
-- **IDE:** IntelliJ IDEA / Eclipse / NetBeans (beliebige Java IDE)  
+- **IDE:** VSC 
 - **Bibliotheken:** Nur Standard-Java-Bibliotheken (keine externen Dependencies)  
 - **Versionierung:** Git / GitHub  
 
@@ -70,8 +70,10 @@ Open http://localhost:50001 in your browser
 $38 ==> LiveView@2d38eb89
 Game g = new Game(2)// Schwierigkeitgrad Mittel
 ```
-![Alt-Text](C:/Users/PC/Pictures/Screenshots/begin.png)
+![Beginbildschirm](assets/begin.png)
+
 Dann kann man seine 4 Schiffe platzieren und für die KI werden automatisch platziert . Danach spielt jeder 3 Mal pro Runde bis wir zu so einem Ergebnis kommen 
-![Alt-Text](C:/Users/PC/Pictures/Screenshots/end.png)
+![Endbildschirm](assets/end.png)
+
 
 
