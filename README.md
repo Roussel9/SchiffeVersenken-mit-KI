@@ -70,10 +70,10 @@ Open http://localhost:50001 in your browser
 $38 ==> LiveView@2d38eb89
 Game g = new Game(2)// Schwierigkeitgrad Mittel
 ```
-![Beginbildschirm](assets/begin.png)
+![Beginbildschirm](C:/Users/PC/SchiffeVersenken-mit-KI/assets/begin.png)
 
 Dann kann man seine 4 Schiffe platzieren und für die KI werden automatisch platziert . Danach spielt jeder 3 Mal pro Runde bis wir zu so einem Ergebnis kommen 
-![Endbildschirm](assets/end.png)
+![Endbildschirm](C:/Users/PC/SchiffeVersenken-mit-KI/assets/end.png)
 
 
 
