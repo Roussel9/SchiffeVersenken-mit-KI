@@ -1,5 +1,5 @@
 
-# Schiffe Versenken – Java Version
+# Schiffe Versenken – Java Version (durch jshell)
 
 ## Projektbeschreibung
 „Schiffe Versenken“ ist eine digitale Umsetzung des klassischen Strategie- und Ratespiels für zwei Spieler, bei dem das Ziel ist, die Flotte des Gegners zu zerstören. In dieser Version hast du die Möglichkeit, gegen eine KI zu spielen, die ihre Schiffe intelligent platziert und auf die Züge des Spielers reagiert.
@@ -50,5 +50,28 @@ Das Projekt ist modular aufgebaut, um die Lesbarkeit und Erweiterbarkeit zu gew�
 
 ## Installation & Nutzung
 1. **Projekt herunterladen / klonen:**  
-```bash
+
 git clone https://github.com/Roussel9/SchiffeVersenken-mit-KI.git
+wechselt man in das Verzeichnis und startet die JShell:
+
+```
+jshell
+```
+
+### 🎹 Ein Beispiel zur Live-View-Programmierung
+
+Die Datei `lvp.java` (kurz für _Live View Programming_) wird in die JShell geladen und der Server für die _Live View_ gestartet.
+
+```
+jshell> /open lvp.java
+
+jshell> Clerk.view()
+Open http://localhost:50001 in your browser
+$38 ==> LiveView@2d38eb89
+Game g = new Game(2)// Schwierigkeitgrad Mittel
+```
+![Alt-Text](C:/Users/PC/Pictures/Screenshots/begin.png)
+Dann kann man seine 4 Schiffe platzieren und für die KI werden automatisch platziert . Danach spielt jeder 3 Mal pro Runde bis wir zu so einem Ergebnis kommen 
+![Alt-Text](C:/Users/PC/Pictures/Screenshots/end.png)
+
+
