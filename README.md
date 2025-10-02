@@ -23,12 +23,6 @@ Dieses Projekt ist mein **erstes Java-Programmierprojekt** und zeigt meine Fähi
 ## Architektur & Struktur
 Das Projekt ist modular aufgebaut, um die Lesbarkeit und Erweiterbarkeit zu gewährleisten.
 
-**Verzeichnisstruktur (Beispiel):**
-
-
-
-
-
 **Datenfluss & Komponenten:**  
 - `Main` startet das Spiel und initialisiert Spieler & KI  
 - `Game` verwaltet das Spielfeld, überprüft Treffer/Verfehlen  
